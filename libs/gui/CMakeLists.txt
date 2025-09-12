@@ -15,3 +15,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Concurrent)
 target_link_libraries(gui PUBLIC
         Qt6::Core Qt6::Widgets Qt6::Gui Qt6::Concurrent
 )
+
+find_package(OpenCV REQUIRED)
+
+target_include_directories(gui PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(gui PUBLIC ${OpenCV_LIBS})
+target_link_libraries(gui PUBLIC askier)
