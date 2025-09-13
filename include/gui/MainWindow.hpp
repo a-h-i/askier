@@ -51,6 +51,7 @@ private:
     QAction *actToggleMode = nullptr;
     QAction *actOpenImage = nullptr;
     QAction *actSaveAscii = nullptr;
+    QAction *actChooseFont = nullptr;
     // state
     InputMode mode = InputMode::Camera;
     QImage lastOriginalImage;

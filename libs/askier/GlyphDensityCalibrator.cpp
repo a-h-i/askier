@@ -1,5 +1,6 @@
 #include "askier/GlyphDensityCalibrator.hpp"
 #include "askier/Constants.hpp"
+#include "askier/version.hpp"
 #include <QStandardPaths>
 #include <QString>
 #include <QDir>
@@ -16,7 +17,7 @@ QString cachePathFromFont(const QFont &font) {
     const QString base = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir().mkpath(base);
     const QString key = font.family() + QString("_%1").arg(font.pointSize());
-    const QString path = base + "/ascii_lut_" + key + ".json";
+    const QString path = base + "/ascii_lut_v" + ASKIER_VERSION + "_" + key + ".json";
     return path;
 }
 

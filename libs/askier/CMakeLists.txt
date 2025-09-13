@@ -26,3 +26,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Concurrent Widgets)
 target_link_libraries(askier PUBLIC
         Qt6::Core Qt6::Concurrent Qt6::Widgets
 )
+# Add the build include dir so the generated header can be found
+target_include_directories(askier PUBLIC ${PROJECT_BINARY_DIR}/include)
+

@@ -21,3 +21,6 @@ find_package(OpenCV REQUIRED)
 target_include_directories(gui PRIVATE ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(gui PUBLIC ${OpenCV_LIBS})
 target_link_libraries(gui PUBLIC askier)
+
+# Add the build include dir so the generated header can be found
+target_include_directories(gui PUBLIC ${PROJECT_BINARY_DIR}/include)

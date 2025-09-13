@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 4.0)
 project(
-        askier
+        Askier
         VERSION 0.0.1
         DESCRIPTION "ASCII art converter"
         LANGUAGES CXX
@@ -8,6 +8,11 @@ project(
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+
+configure_file(
+        include/askier/version.hpp.in
+        include/askier/version.hpp
+)
 
 add_subdirectory(apps)
 add_subdirectory(libs)
