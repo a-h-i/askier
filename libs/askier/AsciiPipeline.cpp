@@ -45,6 +45,38 @@ static std::vector<cv::Mat> srgbToLinear(const cv::Mat &srgb) {
 
 
 /**
+ * Compute per-cell average luminance using an integral image.
+ * This yields exact means over disjoint pixel bins that partition the source.
+ * cells will be of size (rows x cols), type CV_32FC1, with values in [0,1].
+ */
+static void computeCellMeans(const cv::Mat &grayLinear, int cols, int rows, cv::Mat &cellsOut) {
+    const int width = grayLinear.cols;
+    const int height = grayLinear.rows;
+
+    // Integral image with 1-pixel padding; double precision for accuracy.
+    cv::Mat integralSum;
+    cv::integral(grayLinear, integralSum, CV_64F);
+
+    cellsOut.create(rows, cols, CV_32FC1);
+    for (int r = 0; r < rows; ++r) {
+        // Integer bin edges partitioning the source image
+        const int y0 = (r * height) / rows;
+        const int y1 = ((r + 1) * height) / rows;
+        auto *outRow = cellsOut.ptr<float>(r);
+        for (int c = 0; c < cols; ++c) {
+            const int x0 = (c * width) / cols;
+            const int x1 = ((c + 1) * width) / cols;
+
+            const int area = std::max(1, (x1 - x0) * (y1 - y0));
+            const double s =
+                    integralSum.at<double>(y1, x1) - integralSum.at<double>(y1, x0) -
+                    integralSum.at<double>(y0, x1) + integralSum.at<double>(y0, x0);
+            outRow[c] = static_cast<float>(s / static_cast<double>(area));
+        }
+    }
+}
+
+/**
  * Applies an ordered dithering effect to the given matrix of grayscale cell values
  * using a 4x4 Bayer matrix. The resulting matrix values will be adjusted to add a
  * dithering effect while preserving their range within [0,1].
@@ -73,6 +105,7 @@ static void applyOrderedDither(cv::Mat &cells) {
         }
     }
 }
+
 
 /**
  * Apply Floyd-Steinberg dithering to the input matrix of grayscale values,
@@ -156,17 +189,15 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     // Rec.709/sRGB luminance formula.
     // https://en.wikipedia.org/wiki/Rec._709#Luma_coefficients
     cv::Mat gray = 0.2126f * linearChannels[0] + 0.7152f * linearChannels[1] + 0.0722f * linearChannels[2];
-    // Downsample to cells (cols x rows) using area averaging
+    // Compute per-cell average luminance (in linear light) instead of per-pixel mapping.
     cv::Mat cells;
-    cv::resize(gray, cells, cv::Size(columns, rows), 0, 0, cv::INTER_AREA);
+    computeCellMeans(gray, columns, rows, cells);
     applyGamma(cells, params.gamma);
     if (params.dithering == DitheringType::FloydSteinberg) {
         applyFloydSteinberg(cells, 32);
     } else if (params.dithering == DitheringType::Ordered) {
         applyOrderedDither(cells);
     }
-
-
     const AsciiMapper mapper(calibrator);
     Result result;
     result.lines.resize(rows);
