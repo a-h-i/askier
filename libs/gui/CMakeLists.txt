@@ -2,6 +2,8 @@ file(GLOB HEADER_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/include/gui/*.hp
 
 SET(SOURCE_LIST
         MainWindow.cpp
+        ConversionParamsDialog.cpp
+        DoubleSlider.cpp
 )
 
 add_library(gui ${SOURCE_LIST} ${HEADER_FILES})

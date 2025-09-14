@@ -34,6 +34,8 @@ private slots:
 
     void onFontChanged();
 
+    void onAdjustParams();
+
 private:
     void setupUi();
 
@@ -52,6 +54,7 @@ private:
     QAction *actOpenImage = nullptr;
     QAction *actSaveAscii = nullptr;
     QAction *actChooseFont = nullptr;
+    QAction *actAdjustParams = nullptr;
     // state
     InputMode mode = InputMode::Camera;
     QImage lastOriginalImage;

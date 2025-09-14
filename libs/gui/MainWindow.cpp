@@ -14,6 +14,7 @@
 #include <QFontDialog>
 
 #include "askier/ImageUtils.hpp"
+#include "gui/ConversionParamsDialog.hpp"
 
 static const std::string SWITCH_TO_CAMERA_TEXT = "Switch to camera";
 static const std::string SWITCH_TO_IMAGE_TEXT = "Switch to image";
@@ -63,12 +64,16 @@ void MainWindow::setupUi() {
     actChooseFont = new QAction("Choose font", this);
     connect(actChooseFont, &QAction::triggered, this, &MainWindow::onFontChanged);
 
+    actAdjustParams = new QAction("Adjust parameters", this);
+    connect(actAdjustParams, &QAction::triggered, this, &MainWindow::onAdjustParams);
+
     fileMenu->addAction(actToggleMode);
     fileMenu->addAction(actOpenImage);
     fileMenu->addSeparator();
     fileMenu->addAction(actSaveAscii);
     fileMenu->addSeparator();
     fileMenu->addAction(actChooseFont);
+    fileMenu->addAction(actAdjustParams);
 
     auto* central = new QWidget(this);
     auto* layout = new QHBoxLayout(central);
@@ -162,6 +167,7 @@ void MainWindow::onFrameCaptured(const cv::Mat &frame) {
         return;
     }
     lastOriginalImage = matToQImage(frame);
+    originalView->setPixmap(fitPixmap(lastOriginalImage, originalView->size()));
     runAsciiPipeline(frame);
 }
 
@@ -214,5 +220,16 @@ void MainWindow::onFontChanged() {
     pipeline = std::make_unique<AsciiPipeline>(calibrator);
     if (mode == ImageFile) {
         refreshAsciiFromStill();
+    }
+}
+
+
+void MainWindow::onAdjustParams() {
+    ConversionParamsDialog dialog(params, this);
+    if (dialog.exec() == QDialog::Accepted) {
+        params = dialog.getParams();
+        ensureCalibrator();
+        pipeline = std::make_unique<AsciiPipeline>(calibrator);
+        if (mode == ImageFile) {}
     }
 }
