@@ -6,7 +6,7 @@
 
 static const std::string NONE_DITHERING = "None";
 static const std::string FLOYD_STEINBERG_DITHERING = "Floyd-Steinberg";
-static const std::string ATKINSON_DITHERING = "Atkinson";
+static const std::string ATKINSON_DITHERING = "Ordered";
 
 
 ConversionParamsDialog::ConversionParamsDialog(AsciiParams currentParams, QWidget *parent): QDialog(parent), params(currentParams) {
@@ -31,7 +31,7 @@ ConversionParamsDialog::ConversionParamsDialog(AsciiParams currentParams, QWidge
     gamma_slider = new DoubleSlider(Qt::Horizontal, this);
     gamma_slider->setDecimals(3);
     gamma_slider->setMinimum(0.1);
-    gamma_slider->setMaximum(10.0);
+    gamma_slider->setMaximum(20.0);
     gamma_slider->setValue(currentParams.gamma);
     connect(gamma_slider, &DoubleSlider::valueChanged, this, &ConversionParamsDialog::onGammaChanged);
 

@@ -12,6 +12,8 @@
 #include <QMessageBox>
 #include <chrono>
 #include <QFontDialog>
+#include <QStandardPaths>
+#include <QList>
 
 #include "askier/ImageUtils.hpp"
 #include "gui/ConversionParamsDialog.hpp"
@@ -29,7 +31,7 @@ static QPixmap fitPixmap(const QImage &img, const QSize &area) {
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), params{
                                               .columns = 120,
-                                              .gamma = 1.0,
+                                              .gamma = 10.0,
                                               .dithering = DitheringType::None,
                                               .font = QFont("Monospace", DEFAULT_FONT_SIZE),
                                           } {
@@ -50,7 +52,7 @@ void MainWindow::setupUi() {
     setWindowTitle(ASKIER_NAME);
     resize(1200, 800);
 
-    auto* fileMenu = menuBar()->addMenu("&File");
+    auto *fileMenu = menuBar()->addMenu("&File");
     actToggleMode = new QAction(SWITCH_TO_IMAGE_TEXT.c_str(), this);
     connect(actToggleMode, &QAction::triggered, this, &MainWindow::onToggleMode);
 
@@ -75,9 +77,9 @@ void MainWindow::setupUi() {
     fileMenu->addAction(actChooseFont);
     fileMenu->addAction(actAdjustParams);
 
-    auto* central = new QWidget(this);
-    auto* layout = new QHBoxLayout(central);
-    auto* splitter = new QSplitter(Qt::Horizontal, central);
+    auto *central = new QWidget(this);
+    auto *layout = new QHBoxLayout(central);
+    auto *splitter = new QSplitter(Qt::Horizontal, central);
 
     originalView = new QLabel("Original");
     originalView->setAlignment(Qt::AlignCenter);
@@ -93,7 +95,6 @@ void MainWindow::setupUi() {
 
     setCentralWidget(central);
     statusBar()->showMessage("Ready");
-
 }
 
 void MainWindow::ensureCalibrator() {
@@ -137,7 +138,10 @@ void MainWindow::onToggleMode() {
 }
 
 void MainWindow::onOpenImage() {
-    const QString file = QFileDialog::getOpenFileName(this, "Open Image", {}, "Images (*.png *.jpg *.jpeg *.bmp *.webp)");
+    const auto path = QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first();
+    const QString file = QFileDialog::getOpenFileName(this, "Open Image",
+                                                      path,
+                                                      "Images (*.png *.jpg *.jpeg *.bmp *.webp)");
     if (file.isEmpty()) {
         return;
     }
@@ -151,14 +155,12 @@ void MainWindow::onOpenImage() {
 }
 
 void MainWindow::refreshAsciiFromStill() {
-
     if (stillBgr.empty()) {
         return;
     }
     lastOriginalImage = matToQImage(stillBgr);
     originalView->setPixmap(fitPixmap(lastOriginalImage, originalView->size()));
     runAsciiPipeline(stillBgr);
-   
 }
 
 
@@ -202,7 +204,7 @@ void MainWindow::onSaveAscii() {
     }
     QTextStream out(&file);
     out.setEncoding(QStringConverter::Utf8);
-    for (const auto& line : lastAsciiLines) {
+    for (const auto &line: lastAsciiLines) {
         out << line << '\n';
     };
     file.close();
@@ -230,6 +232,8 @@ void MainWindow::onAdjustParams() {
         params = dialog.getParams();
         ensureCalibrator();
         pipeline = std::make_unique<AsciiPipeline>(calibrator);
-        if (mode == ImageFile) {}
+        if (mode == ImageFile) {
+            refreshAsciiFromStill();
+        }
     }
 }

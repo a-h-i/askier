@@ -79,9 +79,9 @@ void GlyphDensityCalibrator::saveCache() {
 
 void GlyphDensityCalibrator::calibrate() {
     QFontMetrics metrics(font_);
-    const int cell_width = std::max(10, metrics.horizontalAdvance("M"));
-    const int cell_height = std::max(10, metrics.lineSpacing());
-    aspect = static_cast<double>(cell_width) / static_cast<double>(cell_height);
+    const int cell_width = metrics.horizontalAdvance('M');
+    const int cell_height = metrics.height();
+    aspect = static_cast<double>(cell_height) / static_cast<double>(cell_width);
 
     // Render each printable ASCII glyph on white background and measure ink coverage;
     struct GlyphDensity {
@@ -108,14 +108,14 @@ void GlyphDensityCalibrator::calibrate() {
         for (int y = 0; y < cell_height; ++y) {
             const uchar *row = bits + y * stride;
             for (int x = 0; x < cell_width; ++x) {
-                double gray = static_cast<double>(row[x]);
+                const double gray = row[x];
                 sum += (255.0 - gray) / 255.0;
             }
         }
         const double density = sum / (cell_width * cell_height);
         glyphs.push_back({static_cast<char>(c), density});
     }
-    std::ranges::sort(glyphs.begin(), glyphs.end(), [](const GlyphDensity &a, const GlyphDensity &b) {
+    std::ranges::sort(glyphs, [](const GlyphDensity &a, const GlyphDensity &b) {
         return a.density < b.density;
     });
     // build LUT
@@ -126,8 +126,11 @@ void GlyphDensityCalibrator::calibrate() {
         });
         if (lower == glyphs.end()) {
             lut_[i] = glyphs.back().c;
-        } else {
+        } else if (lower == glyphs.begin()) {
             lut_[i] = lower->c;
+        } else {
+            auto previous = std::prev(lower);
+            lut_[i] = (target - previous->density <= lower->density - target) ? previous->c : lower->c;
         }
     }
 }
