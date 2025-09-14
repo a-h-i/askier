@@ -28,7 +28,7 @@ private slots:
 
     void onSaveAscii();
 
-    void onFrameReady(const cv::Mat &frame);
+    void onFrameCaptured(const cv::Mat &frame);
 
     void refreshAsciiFromStill();
 
@@ -43,7 +43,7 @@ private:
 
     void ensureCalibrator();
 
-    void updateStatus();
+    void runAsciiPipeline(const cv::Mat &bgr);
 
     // ui
     QLabel *originalView = nullptr;
