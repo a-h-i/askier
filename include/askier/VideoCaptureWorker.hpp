@@ -14,6 +14,8 @@ public:
     void stop();
 
     signals:
+
+
     
 
     void frameCaptured(const cv::Mat &frame);

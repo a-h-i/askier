@@ -35,5 +35,3 @@ QImage AsciiRenderer::render(const std::vector<QString> &lines) const {
     painter.end();
     return img;
 }
-
-

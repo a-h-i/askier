@@ -21,7 +21,10 @@ public:
 
     ~MainWindow();
 
-private slots:
+private
+    slots:
+    
+
     void onToggleMode();
 
     void onOpenImage();

@@ -16,8 +16,12 @@ public:
 
     AsciiParams getParams() const;
 
-public slots:
+public
+    slots:
+    
+
     void onDitheringChanged(const QString &text);
+
     void onGammaChanged(double value);
 
 private:

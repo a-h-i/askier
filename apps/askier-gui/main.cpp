@@ -4,7 +4,7 @@
 #include <string>
 #include <algorithm>
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     QApplication app(argc, argv);
     const std::string appname = ASKIER_NAME;
     std::string appname_lower;

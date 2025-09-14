@@ -1,9 +1,9 @@
 #include "gui/DoubleSlider.hpp"
 
 
-
-DoubleSlider::DoubleSlider(Qt::Orientation orientation, QWidget *parent): QSlider(orientation, parent),
-min(0.0), max(1.0), decimals_(3), scale(std::pow(10.0, decimals_)){
+DoubleSlider::DoubleSlider(Qt::Orientation orientation, QWidget *parent) : QSlider(orientation, parent),
+                                                                           min(0.0), max(1.0), decimals_(3),
+                                                                           scale(std::pow(10.0, decimals_)) {
     QSlider::setRange(min, scaledSpan());
     connect(this, &QSlider::valueChanged, this, &DoubleSlider::handleIntValueChanged);
 }
@@ -58,7 +58,6 @@ void DoubleSlider::setSingleStep(double step) {
         return;
     }
     QSlider::setPageStep(toIntStep(step));
-
 }
 
 void DoubleSlider::setTickInterval(double interval) {
@@ -113,5 +112,3 @@ double DoubleSlider::toDouble(int v) const {
     }
     return min + static_cast<double>(v) / scale;
 }
-
-
