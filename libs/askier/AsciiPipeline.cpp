@@ -15,19 +15,20 @@
  * handle values below and above a certain threshold (0.04045).
  */
 static const cv::Mat &sRGBInverseLUT256() {
-    static cv::Mat lut(1, 256, CV_32F);
-    static bool initialized = false;
-    if (!initialized) {
+    static cv::Mat lut;
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+        lut.create(1, 256, CV_32FC1);
         float *p = lut.ptr<float>();
         for (int i = 0; i < 256; ++i) {
-            const double c = i / 255.0; // sRGB code value normalized to [0,1]
+            const double c = i / 255.0;
             const double L = (c <= 0.04045)
                                  ? (c / 12.92)
                                  : std::pow((c + 0.055) / 1.055, 2.4);
             p[i] = static_cast<float>(L);
         }
-        initialized = true;
-    }
+    });
+
     return lut;
 }
 
