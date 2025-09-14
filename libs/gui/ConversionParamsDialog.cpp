@@ -43,14 +43,14 @@ ConversionParamsDialog::ConversionParamsDialog(AsciiParams currentParams, QWidge
     gammaLabel->setAlignment(Qt::AlignCenter);
     QLabel *ditheringLabel = new QLabel("Dithering", this);
     ditheringLabel->setAlignment(Qt::AlignCenter);
-    QVBoxLayout *layout = new QVBoxLayout(this);
+    QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(label);
     layout->addSpacing(10);
     layout->addWidget(ditheringLabel);
     layout->addWidget(dithering_combo);
     layout->addSpacing(5);
 
-    QHBoxLayout *gamma_slider_layout = new QHBoxLayout(this);
+    QHBoxLayout *gamma_slider_layout = new QHBoxLayout();
     gamma_slider_layout->setContentsMargins(0, 0, 0, 0);
     gamma_slider_layout->setSpacing(6);
     QLabel *gamma_min_label = new QLabel(QString::number(gamma_slider->minimum()), this);
@@ -61,7 +61,7 @@ ConversionParamsDialog::ConversionParamsDialog(AsciiParams currentParams, QWidge
     gamma_slider_layout->addWidget(gamma_max_label);
 
 
-    QVBoxLayout *gamma_layout = new QVBoxLayout(this);
+    QVBoxLayout *gamma_layout = new QVBoxLayout();
     QLabel *gamma_value_label = new QLabel(QString::number(gamma_slider->value()), this);
     gamma_value_label->setAlignment(Qt::AlignCenter);
     gamma_layout->addWidget(gammaLabel);
@@ -74,7 +74,7 @@ ConversionParamsDialog::ConversionParamsDialog(AsciiParams currentParams, QWidge
 
     layout->addLayout(gamma_layout);
 
-    QHBoxLayout *buttons_layout = new QHBoxLayout(this);
+    QHBoxLayout *buttons_layout = new QHBoxLayout();
     buttons_layout->addWidget(apply_button);
     buttons_layout->addWidget(cancel_button);
     layout->addLayout(buttons_layout);
