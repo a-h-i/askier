@@ -79,8 +79,9 @@ void GlyphDensityCalibrator::saveCache() {
 
 void GlyphDensityCalibrator::calibrate() {
     QFontMetrics metrics(font_);
-    const int cell_width = metrics.horizontalAdvance('M');
-    const int cell_height = metrics.height();
+    const int cell_width = std::max(10, metrics.horizontalAdvance("M"));
+    const int cell_height = std::max(10, metrics.height());
+
     aspect = static_cast<double>(cell_height) / static_cast<double>(cell_width);
 
     // Render each printable ASCII glyph on white background and measure ink coverage;
@@ -98,8 +99,28 @@ void GlyphDensityCalibrator::calibrate() {
         painter.setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing, true);
         painter.setPen(Qt::black);
         painter.setFont(font_);
-        painter.drawText(QRect(0, 0, cell_width, cell_height), Qt::AlignCenter, QString(QChar(c)));
+        // Baseline-aligned drawing: horizontally center by text width,
+        // vertically set baseline so ascent/descent are balanced inside the cell.
+        const QString s = QString(QChar(c));
+        const int textWidth = metrics.horizontalAdvance(s);
+        const int ascent = metrics.ascent();
+        const int descent = metrics.descent();
+        int x = (cell_width - textWidth) / 2;
+        int baselineY = (cell_height + ascent - descent) / 2;
+        // Clamp to avoid negative positions in extreme cases
+        if (x < 0) {
+            x = 0;
+        }
+        if (baselineY < 0) {
+            baselineY = 0;
+        }
+        if (baselineY > cell_height) {
+            baselineY = cell_height;
+        }
+        painter.drawText(x, baselineY, s);
         painter.end();
+
+
         // compute normalized darkness coverage
         const uchar *bits = img.constBits();
         const int stride = img.bytesPerLine();

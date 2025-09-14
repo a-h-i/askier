@@ -167,7 +167,7 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     }
 
 
-    AsciiMapper mapper(calibrator);
+    const AsciiMapper mapper(calibrator);
     Result result;
     result.lines.resize(rows);
 
@@ -181,7 +181,7 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
         }
         result.lines[row] = std::move(line);
     }
-    AsciiRenderer renderer(calibrator->font());
+    const AsciiRenderer renderer(calibrator->font());
     result.preview = renderer.render(result.lines);
     return result;
 }
