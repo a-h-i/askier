@@ -23,6 +23,7 @@ struct AsciiParams {
     double gamma;
     DitheringType dithering;
     QFont font;
+    int supersampling_scale;
 };
 
 class AsciiPipeline {

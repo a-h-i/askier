@@ -75,12 +75,40 @@ ConversionParamsDialog::ConversionParamsDialog(AsciiParams currentParams, QWidge
 
     layout->addLayout(gamma_layout);
 
+    QVBoxLayout *sampling_layout = new QVBoxLayout();
+    QLabel *sampling_label = new QLabel("Sampling", this);
+    QLabel *sampling_value_label = new QLabel(QString::number(params.supersampling_scale), this);
+    sampling_value_label->setAlignment(Qt::AlignCenter);
+    sampling_slider = new QSlider(Qt::Horizontal, this);
+    sampling_slider->setRange(1, 10);
+    sampling_slider->setValue(params.supersampling_scale);
+    connect(sampling_slider, &QSlider::valueChanged, sampling_value_label, [sampling_value_label](int value) {
+        sampling_value_label->setText(QString::number(value));
+    });
+    connect(sampling_slider, &QSlider::valueChanged, this, &ConversionParamsDialog::onSamplingChanged);
+    QLabel *sampling_min_label = new QLabel("1", this);
+    QLabel *sampling_max_label = new QLabel("10", this);
+
+    sampling_layout->addWidget(sampling_label);
+    QHBoxLayout *sampling_slider_layout = new QHBoxLayout();
+    sampling_slider_layout->addWidget(sampling_min_label);
+    sampling_slider_layout->addWidget(sampling_slider);
+    sampling_slider_layout->addWidget(sampling_max_label);
+    sampling_layout->addLayout(sampling_slider_layout);
+    sampling_layout->addWidget(sampling_value_label);
+
+    layout->addLayout(sampling_layout);
+
     QHBoxLayout *buttons_layout = new QHBoxLayout();
     buttons_layout->addWidget(apply_button);
     buttons_layout->addWidget(cancel_button);
     layout->addLayout(buttons_layout);
 
     setLayout(layout);
+}
+
+void ConversionParamsDialog::onSamplingChanged(int value) {
+    params.supersampling_scale = value;
 }
 
 AsciiParams ConversionParamsDialog::getParams() const {

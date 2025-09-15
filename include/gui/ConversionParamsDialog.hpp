@@ -19,7 +19,7 @@ public:
 public
     slots:
     
-
+    void onSamplingChanged(int value);
     void onDitheringChanged(const QString &text);
 
     void onGammaChanged(double value);
@@ -28,6 +28,7 @@ private:
     QLabel *label;
     QComboBox *dithering_combo;
     DoubleSlider *gamma_slider;
+    QSlider *sampling_slider;
     QPushButton *apply_button, *cancel_button;
     AsciiParams params;
 };
