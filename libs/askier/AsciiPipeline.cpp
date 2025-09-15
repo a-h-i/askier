@@ -190,22 +190,24 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     // Rec.709/sRGB luminance formula.
     // https://en.wikipedia.org/wiki/Rec._709#Luma_coefficients
     cv::Mat gray = 0.2126f * linearChannels[0] + 0.7152f * linearChannels[1] + 0.0722f * linearChannels[2];
+    cv::Mat blurred;
+    cv::GaussianBlur(gray, blurred, cv::Size(3, 3), 0.6);
+
     cv::Mat cells;
     int supersampling = std::max(1, params.supersampling_scale);
     if (supersampling > 1) {
         // Supersample: upscale with a smooth kernel, then area-average down
         cv::Mat hiGray, downGray;
-        cv::resize(gray, hiGray, cv::Size(columns * supersampling, rows * supersampling), 0, 0, cv::INTER_CUBIC);
+        cv::resize(blurred, hiGray, cv::Size(columns * supersampling, rows * supersampling), 0, 0, cv::INTER_CUBIC);
         cv::resize(hiGray, downGray, cv::Size(columns, rows), 0, 0, cv::INTER_AREA);
         // Compute per-cell average luminance (in linear light) instead of per-pixel mapping.
-
         computeCellMeans(downGray, columns, rows, cells);
     } else {
         // Fallback: direct area average
-        cv::resize(gray, cells, cv::Size(columns, rows), 0, 0, cv::INTER_AREA);
+        cv::resize(blurred, cells, cv::Size(columns, rows), 0, 0, cv::INTER_AREA);
         // Compute per-cell average luminance (in linear light) instead of per-pixel mapping.
 
-        computeCellMeans(gray, columns, rows, cells);
+        computeCellMeans(blurred, columns, rows, cells);
     }
 
 
