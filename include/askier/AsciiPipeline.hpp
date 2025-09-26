@@ -31,6 +31,7 @@ public:
     struct Result {
         std::vector<QString> lines;
         QImage preview;
+        QImage midImage; // intermediate image after grayscale and gamma correction
     };
 
     explicit AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &calibrator);

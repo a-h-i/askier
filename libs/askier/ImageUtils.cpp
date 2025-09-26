@@ -10,3 +10,11 @@ QImage matToQImage(const cv::Mat &bgr) {
 
     return QImage(bgr.data, bgr.cols, bgr.rows, bgr.step, QImage::Format_BGR888).copy();
 }
+
+QImage matToQImageGray(const cv::Mat &gray) {
+    if (gray.empty()) {
+        return QImage();
+    }
+
+    return QImage(gray.data, gray.cols, gray.rows, gray.step, QImage::Format_Grayscale8).copy();
+}
