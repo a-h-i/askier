@@ -2,7 +2,7 @@
 #include <QFont>
 #include <array>
 
-#include "VideoCaptureWorker.hpp"
+#include "askier/Constants.hpp"
 
 /**
  * The LUT (lookup table) is a precomputed array of 256 entries
@@ -16,14 +16,14 @@ public:
 
     void ensureCalibrated();
 
-    const std::array<char, 256> &lut() const { return lut_; }
+    const std::array<char, ASCII_COUNT> &lut() const { return lut_; }
     double cellAspect() const { return aspect; }
     const QFont &font() const { return font_; }
 
 private:
     QFont font_;
     // Look up table
-    std::array<char, 256> lut_{};
+    std::array<char, ASCII_COUNT> lut_{};
     double aspect = 2.0;
 
     void calibrate();

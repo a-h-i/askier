@@ -51,32 +51,32 @@
  * This yields exact means over disjoint pixel bins that partition the source.
  * cells will be of size (rows x cols), type CV_32FC1, with values in [0,1].
  */
-static void computeCellMeans(const cv::Mat &grayLinear, int cols, int rows, cv::Mat &cellsOut) {
-    const int width = grayLinear.cols;
-    const int height = grayLinear.rows;
+// static void computeCellMeans(const cv::Mat &grayLinear, int cols, int rows, cv::Mat &cellsOut) {
+//     const int width = grayLinear.cols;
+//     const int height = grayLinear.rows;
 
-    // Integral image with 1-pixel padding; double precision for accuracy.
-    cv::Mat integralSum;
-    cv::integral(grayLinear, integralSum, CV_64F);
+//     // Integral image with 1-pixel padding; double precision for accuracy.
+//     cv::Mat integralSum;
+//     cv::integral(grayLinear, integralSum, CV_64F);
 
-    cellsOut.create(rows, cols, CV_32FC1);
-    for (int r = 0; r < rows; ++r) {
-        // Integer bin edges partitioning the source image
-        const int y0 = (r * height) / rows;
-        const int y1 = ((r + 1) * height) / rows;
-        auto *outRow = cellsOut.ptr<float>(r);
-        for (int c = 0; c < cols; ++c) {
-            const int x0 = (c * width) / cols;
-            const int x1 = ((c + 1) * width) / cols;
+//     cellsOut.create(rows, cols, CV_32FC1);
+//     for (int r = 0; r < rows; ++r) {
+//         // Integer bin edges partitioning the source image
+//         const int y0 = (r * height) / rows;
+//         const int y1 = ((r + 1) * height) / rows;
+//         auto *outRow = cellsOut.ptr<float>(r);
+//         for (int c = 0; c < cols; ++c) {
+//             const int x0 = (c * width) / cols;
+//             const int x1 = ((c + 1) * width) / cols;
 
-            const int area = std::max(1, (x1 - x0) * (y1 - y0));
-            const double s =
-                    integralSum.at<double>(y1, x1) - integralSum.at<double>(y1, x0) -
-                    integralSum.at<double>(y0, x1) + integralSum.at<double>(y0, x0);
-            outRow[c] = static_cast<float>(s / static_cast<double>(area));
-        }
-    }
-}
+//             const int area = std::max(1, (x1 - x0) * (y1 - y0));
+//             const double s =
+//                     integralSum.at<double>(y1, x1) - integralSum.at<double>(y1, x0) -
+//                     integralSum.at<double>(y0, x1) + integralSum.at<double>(y0, x0);
+//             outRow[c] = static_cast<float>(s / static_cast<double>(area));
+//         }
+//     }
+// }
 
 /**
  * Applies an ordered dithering effect to the given matrix of grayscale cell values
@@ -190,6 +190,19 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     grayUint.convertTo(gray, CV_32F);
     gray /= 255.0;
     
+    // Apply Sobel edge detection to highlight edges
+    cv::Mat sobelX, sobelY, sobel;
+    cv::Sobel(gray, sobelX, CV_32F, 2, 0, 5);  // X gradient
+    cv::Sobel(gray, sobelY, CV_32F, 0, 2, 5);  // Y gradient
+    cv::magnitude(sobelX, sobelY, sobel);       // Combine gradients
+    
+    // Normalize Sobel result to [0, 1] range
+    cv::Mat sobelNorm;
+    cv::normalize(sobel, sobelNorm, 0.0, 1.0, cv::NORM_MINMAX);
+    
+    // Multiply original grayscale with normalized Sobel to highlight edges
+    cv::multiply(gray, 1 - sobelNorm, gray);
+    
     cv::Mat cells;
     // int supersampling = std::max(1, params.supersampling_scale);
     // if (supersampling > 1) {
@@ -208,10 +221,10 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     // }
 
     cv::resize(gray, cells, cv::Size(columns, rows), 0, 0, cv::INTER_AREA);
-    computeCellMeans(gray, columns, rows, cells);
-    cv::GaussianBlur(cells, cells, cv::Size(3, 3), 0.6);
+    // computeCellMeans(gray, columns, rows, cells);
+    // cv::GaussianBlur(cells, cells, cv::Size(3, 3), 0.6);
 
-    applyGamma(cells, params.gamma);
+    // applyGamma(cells, params.gamma);
     // if (params.dithering == DitheringType::FloydSteinberg) {
     //     applyFloydSteinberg(gray, 32);
     // } else if (params.dithering == DitheringType::Ordered) {

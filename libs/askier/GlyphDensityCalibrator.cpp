@@ -49,11 +49,11 @@ bool GlyphDensityCalibrator::tryLoadCache() {
     auto obj = doc.object();
     auto arr = obj.value("lut").toArray();
 
-    if (arr.size() != 256) {
+    if (arr.size() != ASCII_COUNT) {
         return false;
     }
 
-    for (int i = 0; i < 256; ++i) {
+    for (int i = 0; i < ASCII_COUNT; ++i) {
         lut_[i] = static_cast<char>(arr[i].toInt());
     }
     aspect = obj.value("aspect").toDouble(2.0);
@@ -68,7 +68,7 @@ void GlyphDensityCalibrator::saveCache() {
     }
     QJsonObject obj;
     QJsonArray arr;
-    for (int i = 0; i < 256; ++i) {
+    for (int i = 0; i < ASCII_COUNT; ++i) {
         arr.append(static_cast<int>(lut_[i]));
     }
     obj.insert("lut", arr);
@@ -92,7 +92,7 @@ void GlyphDensityCalibrator::calibrate() {
     std::vector<GlyphDensity> glyphs;
     glyphs.reserve(ASCII_COUNT);
 
-    for (int c = ASCII_MIN; c <= ASCII_MAX; c++) {
+    for (int c = ASCII_MIN; c <= ASCII_MAX; ++c) {
         QImage img(cell_width, cell_height, QImage::Format_Grayscale8);
         img.fill(255);
         QPainter painter(&img);
@@ -108,18 +108,10 @@ void GlyphDensityCalibrator::calibrate() {
         int x = (cell_width - textWidth) / 2;
         int baselineY = (cell_height + ascent - descent) / 2;
         // Clamp to avoid negative positions in extreme cases
-        if (x < 0) {
-            x = 0;
-        }
-        if (baselineY < 0) {
-            baselineY = 0;
-        }
-        if (baselineY > cell_height) {
-            baselineY = cell_height;
-        }
+        x = std::max(x, 0);
+        baselineY = std::clamp(baselineY, 0, cell_height);
         painter.drawText(x, baselineY, s);
         painter.end();
-
 
         // compute normalized darkness coverage
         const uchar *bits = img.constBits();
@@ -130,7 +122,7 @@ void GlyphDensityCalibrator::calibrate() {
             const uchar *row = bits + y * stride;
             for (int x = 0; x < cell_width; ++x) {
                 const double gray = row[x];
-                sum += (255.0 - gray) / 255.0;
+                sum += 1.0 - gray / 255.0;
             }
         }
         const double density = sum / (cell_width * cell_height);
@@ -140,18 +132,7 @@ void GlyphDensityCalibrator::calibrate() {
         return a.density < b.density;
     });
     // build LUT
-    for (int i = 0; i < 256; i++) {
-        double target = static_cast<double>(i) / 255.0; // 0 = light, 1 = dark
-        auto lower = std::lower_bound(glyphs.begin(), glyphs.end(), target, [](const GlyphDensity &a, double b) {
-            return a.density < b;
-        });
-        if (lower == glyphs.end()) {
-            lut_[i] = glyphs.back().c;
-        } else if (lower == glyphs.begin()) {
-            lut_[i] = lower->c;
-        } else {
-            auto previous = std::prev(lower);
-            lut_[i] = (target - previous->density <= lower->density - target) ? previous->c : lower->c;
-        }
-    }
+    std::transform(glyphs.begin(), glyphs.end(), lut_.begin(), [](const GlyphDensity &g) {
+        return g.c;
+    });
 }
