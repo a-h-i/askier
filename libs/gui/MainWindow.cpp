@@ -117,9 +117,11 @@ void MainWindow::stopCamera() {
     if (!captureWorker) {
         return;
     }
-    captureWorker->stop();
-    captureWorker->wait();
-    captureWorker.reset();
+    disconnect(captureWorker.get(), &VideoCaptureWorker::frameCaptured, this, &MainWindow::onFrameCaptured);
+    auto worker = captureWorker.release();
+    connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+    worker->stop();
+
 }
 
 void MainWindow::onToggleMode() {
