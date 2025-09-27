@@ -65,6 +65,8 @@ jobs:
       - name: Setup vcpkg (Windows)
         if: matrix.os == 'windows-latest'
         uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: 4334d8b4c8916018600212ab4dd4bbdc343065d1
 
       - name: Install dependencies (Windows via vcpkg)
         if: matrix.os == 'windows-latest'
