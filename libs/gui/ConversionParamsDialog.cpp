@@ -57,11 +57,11 @@ AsciiParams ConversionParamsDialog::getParams() const {
 }
 
 void ConversionParamsDialog::onDitheringChanged(const QString &text) {
-    if (text == NONE_DITHERING) {
+    if (text == NONE_DITHERING.c_str()) {
         params.dithering = None;
-    } else if (text == FLOYD_STEINBERG_DITHERING) {
+    } else if (text == FLOYD_STEINBERG_DITHERING.c_str()) {
         params.dithering = FloydSteinberg;
-    } else if (text == ATKINSON_DITHERING) {
+    } else if (text == ATKINSON_DITHERING.c_str()) {
         params.dithering = Ordered;
     }
 }
