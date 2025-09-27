@@ -12,6 +12,14 @@
             </PerProfileState>
           </value>
         </entry>
+        <entry key="Profile">
+          <value>
+            <PerProfileState>
+              <option name="myQmlPath" value="/usr/lib64/qt6/qml" />
+              <option name="myQtBinPath" value="/usr/lib64/qt6/bin" />
+            </PerProfileState>
+          </value>
+        </entry>
         <entry key="Release">
           <value>
             <PerProfileState>
