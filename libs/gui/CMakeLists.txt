@@ -9,7 +9,13 @@ SET(SOURCE_LIST
 add_library(gui ${SOURCE_LIST} ${HEADER_FILES})
 
 target_compile_features(gui PUBLIC cxx_std_23)
-target_compile_options(gui PRIVATE -Wall -Wextra -Wpedantic)
+target_compile_options(gui PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /WX>
+        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
+        $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>: /02 /DNDEBUG>
+        $<$<AND:$<CONFIG:Release>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -DNDEBUG -march=native>
+
+)
 target_include_directories(gui PUBLIC ../../include)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Concurrent)
