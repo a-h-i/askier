@@ -82,17 +82,6 @@ static void applyFloydSteinberg(cv::Mat &cells, int levels = 32) {
     }
 }
 
-static void applyGamma(cv::Mat &cells, double gamma) {
-    if ((!(gamma > 0.0)) || std::abs(gamma - 1.0) < 1e-6) {
-        return;
-    }
-    const double inv = 1.0 / gamma;
-    cv::pow(cells, inv, cells);
-    // Keep in range just in case of numeric drift
-    cv::min(cells, 1.0, cells);
-    cv::max(cells, 0.0, cells);
-}
-
 
 AsciiPipeline::AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &calibrator) : calibrator(calibrator) {
 }

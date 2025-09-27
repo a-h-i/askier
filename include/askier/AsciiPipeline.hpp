@@ -14,16 +14,8 @@ enum DitheringType {
 
 struct AsciiParams {
     int columns;
-    /**
-     * Apply an adjustable gamma curve to the luminance values before mapping them to glyphs
-     * gamma > 1 brightens mid-tones
-     * gamma < 1 darkens mid-tones
-     * gamma = 1 keeps luminance unchanged
-     */
-    double gamma;
     DitheringType dithering;
     QFont font;
-    int supersampling_scale;
 };
 
 class AsciiPipeline {

@@ -31,10 +31,8 @@ static QPixmap fitPixmap(const QImage &img, const QSize &area) {
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), params{
                                               .columns = 120,
-                                              .gamma = 10.0,
                                               .dithering = DitheringType::None,
                                               .font = QFont("Monospace", DEFAULT_FONT_SIZE),
-                                              .supersampling_scale = 2,
                                           } {
     params.font.setStyleHint(QFont::Monospace);
     setupUi();
