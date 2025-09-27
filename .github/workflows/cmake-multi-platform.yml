@@ -67,11 +67,9 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgGitCommitId: 4334d8b4c8916018600212ab4dd4bbdc343065d1
-
-      - name: Install dependencies (Windows via vcpkg)
-        if: matrix.os == 'windows-latest'
-        run: |
-          vcpkg install opencv[core]:x64-windows qtbase:x64-windows
+          vcpkgJsonGlob: '**/vcpkg.json'
+          doNotCache: 'false'
+          runVcpkgInstall: 'true'
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
