@@ -81,6 +81,7 @@ jobs:
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          ${{ matrix.os == 'windows-latest' && format('-DCMAKE_TOOLCHAIN_FILE={0}\scripts\buildsystems\vcpkg.cmake', env.VCPKG_ROOT) || '' }}
           -S ${{ github.workspace }}
 
       - name: Build
