@@ -16,7 +16,7 @@ public:
 
     void ensureCalibrated();
 
-    const std::array<char, ASCII_COUNT> &lut() const { return lut_; }
+    const auto &lut() const { return lut_; }
     double cellAspect() const { return aspect; }
     const QFont &font() const { return font_; }
 

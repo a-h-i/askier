@@ -9,6 +9,6 @@ char AsciiMapper::map(double luminance) const {
     // convert brightness to darkness index
     const double darkness = 1.0 - luminance;
     const auto &lut = calibrator->lut();
-    int idx = static_cast<int>(std::round(darkness * ASCII_COUNT));
+    const int idx = static_cast<int>(std::round(darkness * ASCII_COUNT));
     return lut[idx];
 }
