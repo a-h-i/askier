@@ -3,6 +3,7 @@
 #include <array>
 
 #include "askier/Constants.hpp"
+#undef emit
 
 /**
  * The LUT (lookup table) is a precomputed array of 256 entries

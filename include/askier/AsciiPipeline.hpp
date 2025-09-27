@@ -3,6 +3,7 @@
 #include <vector>
 #include <QImage>
 #include <opencv2/core.hpp>
+#undef emit
 
 
 enum DitheringType {

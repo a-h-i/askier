@@ -1,6 +1,10 @@
 #include "askier/AsciiPipeline.hpp"
+
+#include <ranges>
+
 #include "askier/AsciiMapper.hpp"
 #include <opencv2/imgproc.hpp>
+#include <pstl/glue_execution_defs.h>
 
 #include "askier/AsciiRenderer.hpp"
 #include "askier/ImageUtils.hpp"
@@ -86,6 +90,26 @@ static void applyFloydSteinberg(cv::Mat &cells, int levels = 32) {
 AsciiPipeline::AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &calibrator) : calibrator(calibrator) {
 }
 
+struct LookupAsciiFunc {
+    int columns;
+    cv::Mat &cellsCpu;
+    AsciiPipeline::Result &result;
+    const AsciiMapper &mapper;
+
+    void operator()(const oneapi::tbb::blocked_range<int> &range) const {
+        for (int row = range.begin(); row != range.end(); ++row) {
+            QString line;
+            line.reserve(columns);
+            const float *row_ptr = cellsCpu.ptr<float>(row);
+            for (int col = 0; col < columns; ++col) {
+                const auto luminance = static_cast<double>(row_ptr[col]);
+                line.push_back(mapper.map(luminance));
+            }
+            result.lines[row] = std::move(line);
+        }
+    }
+};
+
 
 AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiParams &params) const {
     if (bgr.empty()) {
@@ -100,54 +124,57 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     const int rows = std::max(
         4, static_cast<int>(std::round(
             static_cast<double>(height) / static_cast<double>(width) * columns / aspect)));
+    cv::UMat bgrGPU = bgr.getUMat(cv::ACCESS_RW);
+    cv::UMat grayUint(bgrGPU.size(), CV_8UC1, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+    cv::cvtColor(bgrGPU, grayUint, cv::COLOR_BGR2GRAY);
+    cv::UMat gray(grayUint.size(), CV_32F, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+    grayUint.convertTo(gray, CV_32F, 1 / 255.0);
 
-    cv::Mat grayUint;
-    cv::cvtColor(bgr, grayUint, cv::COLOR_BGR2GRAY);
-    cv::Mat gray;
-    grayUint.convertTo(gray, CV_32F);
-    gray /= 255.0;
-    
     // Apply Sobel edge detection to highlight edges
-    cv::Mat sobelX, sobelY, sobel;
-    cv::Sobel(gray, sobelX, CV_32F, 2, 0, 5);  // X gradient
-    cv::Sobel(gray, sobelY, CV_32F, 0, 2, 5);  // Y gradient
-    cv::magnitude(sobelX, sobelY, sobel);       // Combine gradients
-    
-    // Normalize Sobel result to [0, 1] range
-    cv::Mat sobelNorm;
-    cv::normalize(sobel, sobelNorm, 0.0, 1.0, cv::NORM_MINMAX);
-    
+    // cv::UMat sobelX, sobelY, sobel;
+    // cv::Sobel(gray, sobelX, CV_32F, 2, 0, 5);  // X gradient
+    // cv::Sobel(gray, sobelY, CV_32F, 0, 2, 5);  // Y gradient
+    // cv::magnitude(sobelX, sobelY, sobel);       // Combine gradients
+    //
+    // // Normalize Sobel result to [0, 1] range
+    // cv::UMat sobelNorm;
+    // cv::normalize(sobel, sobelNorm, 0.0, 1.0, cv::NORM_MINMAX);
+    // cv::multiply(sobelNorm, -1, sobel);
+    // cv::add(sobelNorm, 1, sobel);
+
     // Multiply original grayscale with normalized Sobel to highlight edges
-    cv::multiply(gray, 1 - sobelNorm, gray);
-    
-    cv::Mat cells;
-    cv::resize(gray, cells, cv::Size(columns, rows), 0, 0, cv::INTER_AREA);
+    // cv::multiply(gray, sobelNorm, gray);
+    const auto outputSize = cv::Size(columns, rows);
+    cv::UMat cells(outputSize, CV_32F, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+    cv::resize(gray, cells, outputSize, 0, 0, cv::INTER_AREA);
+
+    cv::Mat cellsCpu = cells.getMat(cv::ACCESS_RW);
 
     if (params.dithering == DitheringType::FloydSteinberg) {
-        applyFloydSteinberg(cells, 32);
+        applyFloydSteinberg(cellsCpu, 32);
     } else if (params.dithering == DitheringType::Ordered) {
-        applyOrderedDither(cells);
+        applyOrderedDither(cellsCpu);
     }
 
     const AsciiMapper mapper(calibrator);
     Result result;
     result.lines.resize(rows);
+    auto asciiRenderer = LookupAsciiFunc{
+        .columns = columns,
+        .cellsCpu = cellsCpu,
+        .result = result,
+        .mapper = mapper
+    };
 
-    for (int row = 0; row < rows; ++row) {
-        QString line;
-        line.reserve(columns);
-        const float *row_ptr = cells.ptr<float>(row);
-        for (int col = 0; col < columns; ++col) {
-            const auto luminance = static_cast<double>(row_ptr[col]);
-            line.push_back(mapper.map(luminance));
-        }
-        result.lines[row] = std::move(line);
-    }
+
+    oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, rows), asciiRenderer);
+
+
     const AsciiRenderer renderer(calibrator->font());
     result.preview = renderer.render(result.lines);
     cv::Mat midImage;
-    cells = cells * 255;
-    cells.convertTo(midImage, CV_8UC1);
+    cellsCpu = cellsCpu * 255;
+    cellsCpu.convertTo(midImage, CV_8UC1);
     result.midImage = matToQImageGray(midImage);
     return result;
 }

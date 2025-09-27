@@ -23,9 +23,10 @@ target_compile_options(askier PRIVATE
 target_include_directories(askier PUBLIC ../../include)
 
 find_package(OpenCV REQUIRED)
+find_package(TBB REQUIRED)
 
 target_include_directories(askier PRIVATE ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(askier PUBLIC ${OpenCV_LIBS})
+target_link_libraries(askier PUBLIC ${OpenCV_LIBS} TBB::tbb)
 find_package(Qt6 REQUIRED COMPONENTS Core Concurrent Widgets)
 
 target_link_libraries(askier PUBLIC
