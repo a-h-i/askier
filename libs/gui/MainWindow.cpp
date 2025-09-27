@@ -31,10 +31,8 @@ static QPixmap fitPixmap(const QImage &img, const QSize &area) {
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), params{
                                               .columns = 120,
-                                              .gamma = 10.0,
                                               .dithering = DitheringType::None,
                                               .font = QFont("Monospace", DEFAULT_FONT_SIZE),
-                                              .supersampling_scale = 2,
                                           } {
     params.font.setStyleHint(QFont::Monospace);
     setupUi();
@@ -86,11 +84,16 @@ void MainWindow::setupUi() {
     originalView->setAlignment(Qt::AlignCenter);
     originalView->setMinimumSize(200, 200);
 
+    middleView = new QLabel("Middle");
+    middleView->setAlignment(Qt::AlignCenter);
+    middleView->setMinimumSize(200, 200);
+
     asciiView = new QLabel("ASCII Preview");
     asciiView->setAlignment(Qt::AlignCenter);
     asciiView->setMinimumSize(200, 200);
 
     splitter->addWidget(originalView);
+    splitter->addWidget(middleView);
     splitter->addWidget(asciiView);
     layout->addWidget(splitter);
 
@@ -186,6 +189,7 @@ void MainWindow::runAsciiPipeline(const cv::Mat &bgr) {
     auto result = pipeline->process(bgr, params);
     lastAsciiLines = std::move(result.lines);
     asciiView->setPixmap(fitPixmap(result.preview, asciiView->size()));
+    middleView->setPixmap(fitPixmap(result.midImage, middleView->size()));
     const auto after = high_resolution_clock::now();
     const auto elapsed_ms = duration_cast<milliseconds>(after - before);
     statusBar()->showMessage(QString("Generated ASCII preview in %1ms").arg(elapsed_ms.count()));

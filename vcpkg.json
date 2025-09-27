@@ -1,0 +1,9 @@
+{
+  "name": "askier",
+  "version-string": "0.1.0",
+  "dependencies": [
+    { "name": "opencv", "default-features": false, "features": [ "core" ] },
+    "qtbase"
+  ],
+  "builtin-baseline": "4334d8b4c8916018600212ab4dd4bbdc343065d1"
+}

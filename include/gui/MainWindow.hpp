@@ -52,6 +52,7 @@ private:
 
     // ui
     QLabel *originalView = nullptr;
+    QLabel *middleView = nullptr;
     QLabel *asciiView = nullptr;
     QAction *actToggleMode = nullptr;
     QAction *actOpenImage = nullptr;
