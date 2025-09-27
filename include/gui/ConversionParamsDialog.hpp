@@ -11,7 +11,7 @@ class ConversionParamsDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConversionParamsDialog(AsciiParams currentParams, QWidget *parent = nullptr);
+    explicit ConversionParamsDialog(const AsciiParams &currentParams, QWidget *parent = nullptr);
 
     AsciiParams getParams() const;
 

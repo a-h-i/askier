@@ -9,7 +9,7 @@ static const std::string FLOYD_STEINBERG_DITHERING = "Floyd-Steinberg";
 static const std::string ATKINSON_DITHERING = "Ordered";
 
 
-ConversionParamsDialog::ConversionParamsDialog(AsciiParams currentParams, QWidget *parent) : QDialog(parent),
+ConversionParamsDialog::ConversionParamsDialog(const AsciiParams &currentParams, QWidget *parent) : QDialog(parent),
     params(currentParams) {
     label = new QLabel("Adjust Conversion Parameters", this);
 
@@ -18,9 +18,9 @@ ConversionParamsDialog::ConversionParamsDialog(AsciiParams currentParams, QWidge
     dithering_combo->addItem(FLOYD_STEINBERG_DITHERING.c_str());
     dithering_combo->addItem(ATKINSON_DITHERING.c_str());
 
-    if (currentParams.dithering == DitheringType::FloydSteinberg) {
+    if (params.dithering == DitheringType::FloydSteinberg) {
         dithering_combo->setCurrentIndex(1);
-    } else if (currentParams.dithering == DitheringType::Ordered) {
+    } else if (params.dithering == DitheringType::Ordered) {
         dithering_combo->setCurrentIndex(2);
     } else {
         dithering_combo->setCurrentIndex(0);
