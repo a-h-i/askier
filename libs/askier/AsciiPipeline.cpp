@@ -131,19 +131,19 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     grayUint.convertTo(gray, CV_32F, 1 / 255.0);
 
     // Apply Sobel edge detection to highlight edges
-    // cv::UMat sobelX, sobelY, sobel;
-    // cv::Sobel(gray, sobelX, CV_32F, 2, 0, 5);  // X gradient
-    // cv::Sobel(gray, sobelY, CV_32F, 0, 2, 5);  // Y gradient
-    // cv::magnitude(sobelX, sobelY, sobel);       // Combine gradients
+    cv::UMat sobelX, sobelY, sobel;
+    cv::Sobel(gray, sobelX, CV_32F, 2, 0, 5);  // X gradient
+    cv::Sobel(gray, sobelY, CV_32F, 0, 2, 5);  // Y gradient
+    cv::magnitude(sobelX, sobelY, sobel);       // Combine gradients
     //
-    // // Normalize Sobel result to [0, 1] range
-    // cv::UMat sobelNorm;
-    // cv::normalize(sobel, sobelNorm, 0.0, 1.0, cv::NORM_MINMAX);
-    // cv::multiply(sobelNorm, -1, sobel);
-    // cv::add(sobelNorm, 1, sobel);
+    // Normalize Sobel result to [0, 1] range
+    cv::UMat sobelNorm;
+    cv::normalize(sobel, sobelNorm, 0.0, 1.0, cv::NORM_MINMAX);
+    cv::multiply(sobelNorm, -1, sobelNorm);
+    cv::add(sobelNorm, 1, sobelNorm);
 
     // Multiply original grayscale with normalized Sobel to highlight edges
-    // cv::multiply(gray, sobelNorm, gray);
+    cv::multiply(gray, sobelNorm, gray);
     const auto outputSize = cv::Size(columns, rows);
     cv::UMat cells(outputSize, CV_32F, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
     cv::resize(gray, cells, outputSize, 0, 0, cv::INTER_AREA);

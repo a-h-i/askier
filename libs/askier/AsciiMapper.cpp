@@ -11,5 +11,5 @@ char AsciiMapper::map(double luminance) const {
     const auto lutSize = lut.size();
     const int maxIndex = lutSize - 1;
     const auto idx = static_cast<int>(std::round(darkness * maxIndex));
-    return lut[std::clamp(0, idx, maxIndex)];
+    return lut[std::clamp(idx, 0, maxIndex)];
 }
