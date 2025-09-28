@@ -48,13 +48,24 @@ bool GlyphDensityCalibrator::tryLoadCache() {
     }
     auto obj = doc.object();
     auto arr = obj.value("lut").toArray();
+    auto pixmaps = obj.value("pixmaps").toArray();
+    auto heights = obj.value("pixmap_heights").toArray();
+    auto widths = obj.value("pixmap_widths").toArray();
 
-    if (arr.size() != ASCII_COUNT) {
+    if (arr.size() != ASCII_COUNT || pixmaps.size() != ASCII_COUNT || heights.size() != ASCII_COUNT || widths.size() !=
+        ASCII_COUNT) {
         return false;
     }
 
     for (int i = 0; i < ASCII_COUNT; ++i) {
         lut_[i] = static_cast<char>(arr[i].toInt());
+        pixmap_widths[i] = widths[i].toInt();
+        pixmap_heights[i] = heights[i].toInt();
+        auto pixmapJson = pixmaps[i].toArray();
+        this->pixmaps_[i].reserve(pixmapJson.size());
+        for (int j = 0; j < pixmapJson.size(); ++j) {
+            this->pixmaps_[i].push_back(static_cast<uchar>(pixmapJson[i].toInt()));
+        }
     }
     aspect = obj.value("aspect").toDouble(2.0);
     return true;
@@ -68,11 +79,24 @@ void GlyphDensityCalibrator::saveCache() {
     }
     QJsonObject obj;
     QJsonArray arr;
+    QJsonArray pixMaps;
+    QJsonArray heights;
+    QJsonArray widths;
     for (int i = 0; i < ASCII_COUNT; ++i) {
         arr.append(static_cast<int>(lut_[i]));
+        QJsonArray pixMap;
+        for (const auto &byte: pixmaps_[i]) {
+            pixMap.append(byte);
+        }
+        pixMaps.append(pixMap);
+        heights.append(pixmap_heights[i]);
+        widths.append(pixmap_widths[i]);
     }
     obj.insert("lut", arr);
     obj.insert("aspect", aspect);
+    obj.insert("pixmaps", pixMaps);
+    obj.insert("pixmap_heights", heights);
+    obj.insert("pixmap_widths", widths);
     file.write(QJsonDocument(obj).toJson());
     file.close();
 }
@@ -88,6 +112,8 @@ void GlyphDensityCalibrator::calibrate() {
     struct GlyphDensity {
         char c;
         double density;
+        std::vector<uchar> pixmap;
+        int cell_width, cell_height;
     };
     std::vector<GlyphDensity> glyphs;
     glyphs.reserve(ASCII_COUNT);
@@ -117,22 +143,28 @@ void GlyphDensityCalibrator::calibrate() {
         const uchar *bits = img.constBits();
         const int stride = img.bytesPerLine();
         double sum = 0.0;
+        std::vector<uchar> pixmap;
 
         for (int y = 0; y < cell_height; ++y) {
             const uchar *row = bits + y * stride;
             for (int x = 0; x < cell_width; ++x) {
                 const double gray = row[x];
+                pixmap.push_back(row[x]);
                 sum += 1.0 - gray / 255.0;
             }
         }
         const double density = sum / (cell_width * cell_height);
-        glyphs.push_back({static_cast<char>(c), density});
+        glyphs.push_back({static_cast<char>(c), density, pixmap, cell_width, cell_height});
     }
     std::ranges::sort(glyphs, [](const GlyphDensity &a, const GlyphDensity &b) {
         return a.density < b.density;
     });
     // build LUT
-    std::transform(glyphs.begin(), glyphs.end(), lut_.begin(), [](const GlyphDensity &g) {
-        return g.c;
-    });
+    for (size_t i = 0; i < lut_.size(); ++i) {
+        const auto &glyph = glyphs[i];
+        lut_[i] = glyph.c;
+        pixmaps_[i] = glyph.pixmap;
+        pixmap_heights[i] = glyph.cell_height;
+        pixmap_widths[i] = glyph.cell_width;
+    }
 }
