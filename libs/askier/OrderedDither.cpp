@@ -2,15 +2,7 @@
 
 #include "askier/Dithering.hpp"
 
-/**
-* Applies an ordered dithering effect to the given matrix of grayscale cell values
- * using a 4x4 Bayer matrix. The resulting matrix values will be adjusted to add a
- * dithering effect while preserving their range within [0,1].
- * https://en.wikipedia.org/wiki/Ordered_dithering
- * @param cells A cv::UMat of type CV_32FC1 (single-channel 32-bit floating point)
- *              containing grayscale values normalized to the range [0,1].
- *
- */
+
  void applyOrderedDither(cv::UMat &cells) {
     // Bayer 4x4 pattern as CV_32F
     static const float bayerData[16] = {

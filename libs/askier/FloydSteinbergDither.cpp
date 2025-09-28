@@ -50,34 +50,17 @@ kernel void floyd_steinberg_serpentine(
 
 )SRC";
 
-/**
- * Apply Floyd-Steinberg dithering to the input matrix of grayscale values,
- * diffusing quantization errors to neighboring pixels to improve the visual
- * representation of quantized levels.
- *
- * The dithering process works in-place on the input matrix. It adjusts the
- * pixel values to the nearest quantization level and spreads the quantization
- * error to neighboring pixels using standard Floyd-Steinberg error diffusion
- * weights.
- * https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
- * @param cells A cv::UMat representing the grayscale image; pixel values must
- *              be in the range [0.0, 1.0]. The matrix is modified in-place.
- * @param levels The number of quantization levels, clamped to the range [2, 256].
- *               Defaults to 32.
- */
+
 void applyFloydSteinberg(cv::UMat &cells, int levels) {
     levels = std::clamp(levels, 2, 256);
     CV_Assert(cells.type() == CV_32F && cells.channels() == 1);
     // Ensure we have a contiguous buffer in row-major cols stride
-    cv::UMat continous;
+    cv::UMat continuous(cv::USAGE_ALLOCATE_DEVICE_MEMORY);
     if (cells.isContinuous() && cells.cols == static_cast<int>(cells.step1())) {
-        continous = cells;
+        continuous = cells;
     } else {
-        cells.copyTo(continous);
+        cells.copyTo(continuous);
     }
-
-    cv::UMat flat = continous.reshape(1, 1);
-    CV_Assert(flat.isContinuous());
 
     auto context = cv::ocl::Context::getDefault();
     std::string compileErrors;
@@ -89,9 +72,9 @@ void applyFloydSteinberg(cv::UMat &cells, int levels) {
     cv::ocl::Kernel kernel("floyd_steinberg_serpentine", program);
     CV_Assert(!kernel.empty());
     // Kernel args
-    // Pass the original 2D buffer but index as flat (rows*cols). We use reshape to ensure continuity.
+    // Pass the original 2D buffer but index as flat (rows*cols)
     kernel.args(
-        cv::ocl::KernelArg::ReadWrite(continous), // underlying buffer shared with uFlat
+        cv::ocl::KernelArg::ReadWrite(continuous), // underlying buffer shared
         cells.rows,
         cells.cols,
         levels
