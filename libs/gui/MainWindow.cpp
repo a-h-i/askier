@@ -30,7 +30,7 @@ static QPixmap fitPixmap(const QImage &img, const QSize &area) {
 
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), params{
-                                              .columns = 480,
+                                              .columns = 720,
                                               .dithering = DitheringType::None,
                                               .font = QFont("Monospace", DEFAULT_FONT_SIZE),
                                           } {

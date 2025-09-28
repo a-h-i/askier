@@ -65,6 +65,8 @@ jobs:
             ${{ env.VCPKG_ROOT }}/buildtrees
             ${{ env.VCPKG_ROOT }}/downloads
           key: vcpkg-artifacts-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}-${{ hashFiles('.github/workflows/cmake-multi-platform.yml') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
 
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-latest'

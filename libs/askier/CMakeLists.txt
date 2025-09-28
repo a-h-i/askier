@@ -17,7 +17,7 @@ target_compile_features(askier PUBLIC cxx_std_23)
 target_compile_options(askier PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /WX>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
-        $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>: /02 /DNDEBUG>
+        $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>: /O2 /DNDEBUG>
         $<$<AND:$<CONFIG:Release>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -DNDEBUG -march=native>
 )
 

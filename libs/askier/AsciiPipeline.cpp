@@ -4,6 +4,7 @@
 
 #include "askier/AsciiMapper.hpp"
 #include <opencv2/imgproc.hpp>
+#include <opencv2/core/ocl.hpp>
 #include <pstl/glue_execution_defs.h>
 
 #include "askier/AsciimapOCL.hpp"
@@ -129,7 +130,7 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     cv::UMat cells(outputSize, CV_32F, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
     cv::resize(gray, cells, outputSize, 0, 0, cv::INTER_AREA);
 
-    cv::Mat cellsCpu = cells.getMat(cv::ACCESS_RW);
+    cv::Mat cellsCpu = cells.getMat(cv::ACCESS_READ);
 
     if (params.dithering == DitheringType::FloydSteinberg) {
         applyFloydSteinberg(cellsCpu, 32);
@@ -140,10 +141,8 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     Result result;
     result.lines.resize(rows);
 
-    cv::UMat cells8u(cellsCpu.size(), CV_8UC1, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
-    cellsCpu.convertTo(cells8u, CV_8UC1);
 
-    auto mappedMatrix = asciiMapOCL(cells8u, calibrator->lut());
+    auto mappedMatrix = ascii_mapper_ocl(cellsCpu.getUMat(cv::ACCESS_READ), calibrator->lut());
 
     oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),
                               [&mappedMatrix, &result](const oneapi::tbb::blocked_range<int> &range) {
