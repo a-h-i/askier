@@ -1,6 +1,3 @@
-
-
-
 #include <string>
 #include <CL/opencl.hpp>
 #include <opencv2/core/mat.hpp>
@@ -16,9 +13,20 @@ int glyphs_offset,
 __global const uchar *dense_pixmaps,
 __global const uchar *pixmap_widths,
 __global const uchar *pixmap_heights,
+__global uchar *dst,
+int output_cell_width,
+int output_cell_height,
 ) {
     const int x = get_global_id(0);
     const int y = get_global_id(1);
+    const int glyph_idx = y * glyphs_step + x + glyphs_offset;
+    const uchar glyph = glyphs[glyph_idx];
+    const width = pixmap_widths[(int)glyph];
+    const height = pixmap_heights[(int)glyph];
+    // We have a pixmap representing glyph of width x height dimensions
+    // that we want to render into a cell of output_cell_width x output_cell_height dimensions.
+   // This is further complicated by needing to find the start index of our pixmap in dense_pixmaps
+   // as they are of non-uniform dimensions.
 }
 
 )SRC";
@@ -28,14 +36,19 @@ cv::Mat ascii_draw_glyphs_ocl(
     const cv::UMat &glyphs,
     const cv::UMat &densePixmaps,
     const cv::UMat &pixmapWidths,
-    const cv::UMat &pixmapHeights
+    const cv::UMat &pixmapHeights,
+    const int outputCellWidth,
+    const int outputCellHeight
 ) {
     CV_Assert(glyphs.type() == CV_8U);
     CV_Assert(densePixmaps.type() == CV_8U);
     CV_Assert(pixmapWidths.type() == CV_8U);
     CV_Assert(pixmapHeights.type() == CV_8U);
+    CV_Assert(outputCellWidth >= 1);
+    CV_Assert(outputCellHeight >= 1);
 
-    cv::UMat dst(glyphs.size(), CV_8UC1, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+    cv::UMat dst(glyphs.rows * outputCellHeight, glyphs.cols * outputCellWidth, CV_8UC1,
+                 cv::USAGE_ALLOCATE_DEVICE_MEMORY);
 
     cv::ocl::ProgramSource source(kernel_source);
     std::string compileErrors;
@@ -55,7 +68,9 @@ cv::Mat ascii_draw_glyphs_ocl(
         cv::ocl::KernelArg::PtrReadOnly(densePixmaps),
         cv::ocl::KernelArg::PtrReadOnly(pixmapWidths),
         cv::ocl::KernelArg::PtrReadOnly(pixmapHeights),
-        cv::ocl::KernelArg::WriteOnly(dst)
+        cv::ocl::KernelArg::WriteOnly(dst),
+        outputCellWidth,
+        outputCellHeight
     );
 
     size_t globals[2] = {static_cast<size_t>(glyphs.cols), static_cast<size_t>(glyphs.rows)};

@@ -8,5 +8,7 @@
     const cv::UMat &glyphs,
     const cv::UMat &densePixmaps,
     const cv::UMat &pixmapWidths,
-    const cv::UMat &pixmapHeights
+    const cv::UMat &pixmapHeights,
+    int outputCellWidth,
+    int outputCellHeight
 );
