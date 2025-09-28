@@ -48,11 +48,11 @@ bool GlyphDensityCalibrator::tryLoadCache() {
     }
     auto obj = doc.object();
     auto arr = obj.value("lut").toArray();
-    auto pixmaps = obj.value("pixmaps").toArray();
+    auto pixmaps = obj.value("pixmap").toArray();
     auto heights = obj.value("pixmap_heights").toArray();
     auto widths = obj.value("pixmap_widths").toArray();
 
-    if (arr.size() != ASCII_COUNT || pixmaps.size() != ASCII_COUNT || heights.size() != ASCII_COUNT || widths.size() !=
+    if (arr.size() != ASCII_COUNT || heights.size() != ASCII_COUNT || widths.size() !=
         ASCII_COUNT) {
         return false;
     }
@@ -61,11 +61,10 @@ bool GlyphDensityCalibrator::tryLoadCache() {
         lut_[i] = static_cast<char>(arr[i].toInt());
         pixmap_widths[i] = widths[i].toInt();
         pixmap_heights[i] = heights[i].toInt();
-        auto pixmapJson = pixmaps[i].toArray();
-        this->pixmaps_[i].reserve(pixmapJson.size());
-        for (int j = 0; j < pixmapJson.size(); ++j) {
-            this->pixmaps_[i].push_back(static_cast<uchar>(pixmapJson[i].toInt()));
-        }
+    }
+    this->pixmaps_.reserve(pixmaps.size());
+    for (int i = 0; i < pixmaps.size(); ++i) {
+        this->pixmaps_.push_back(static_cast<uchar>(pixmaps[i].toInt()));
     }
     aspect = obj.value("aspect").toDouble(2.0);
     return true;
@@ -79,22 +78,21 @@ void GlyphDensityCalibrator::saveCache() {
     }
     QJsonObject obj;
     QJsonArray arr;
-    QJsonArray pixMaps;
     QJsonArray heights;
     QJsonArray widths;
     for (int i = 0; i < ASCII_COUNT; ++i) {
         arr.append(static_cast<int>(lut_[i]));
-        QJsonArray pixMap;
-        for (const auto &byte: pixmaps_[i]) {
-            pixMap.append(byte);
-        }
-        pixMaps.append(pixMap);
+
         heights.append(pixmap_heights[i]);
         widths.append(pixmap_widths[i]);
     }
+    QJsonArray pixMap;
+    for (const auto &byte: pixmaps_) {
+        pixMap.append(byte);
+    }
     obj.insert("lut", arr);
     obj.insert("aspect", aspect);
-    obj.insert("pixmaps", pixMaps);
+    obj.insert("pixmap", pixMap);
     obj.insert("pixmap_heights", heights);
     obj.insert("pixmap_widths", widths);
     file.write(QJsonDocument(obj).toJson());
@@ -163,7 +161,7 @@ void GlyphDensityCalibrator::calibrate() {
     for (size_t i = 0; i < lut_.size(); ++i) {
         const auto &glyph = glyphs[i];
         lut_[i] = glyph.c;
-        pixmaps_[i] = glyph.pixmap;
+        std::ranges::copy(glyph.pixmap, std::back_inserter(pixmaps_));
         pixmap_heights[i] = glyph.cell_height;
         pixmap_widths[i] = glyph.cell_width;
     }
