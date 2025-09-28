@@ -7,8 +7,8 @@
     cv::ocl::Context &context,
     const cv::UMat &glyphs,
     const cv::UMat &densePixmaps,
-    const cv::UMat &pixmapWidths,
-    const cv::UMat &pixmapHeights,
-    int outputCellWidth,
-    int outputCellHeight
+    const int pixmapWidth,
+    const int pixmapHeight,
+    const int outputCellWidth,
+    const int outputCellHeight
 );

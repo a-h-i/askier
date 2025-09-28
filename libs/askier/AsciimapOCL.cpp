@@ -41,9 +41,6 @@ int dst_cols
         darkness_index = max_lut_index;
     }
     dst[dst_idx] = lut[darkness_index];
-
-
-
 }
 )SRC";
 
