@@ -72,7 +72,6 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
 
     auto mappedUMatrix = ascii_mapper_ocl(clContext, cells, calibrator->lut());
 
-    auto mappedMatrix = mappedUMatrix.getMat(cv::ACCESS_READ).clone();
 
     auto linesMappingFuture = std::async(std::launch::async, [&mappedUMatrix, &result]() {
         auto mappedMatrix = mappedUMatrix.getMat(cv::ACCESS_READ).clone();
