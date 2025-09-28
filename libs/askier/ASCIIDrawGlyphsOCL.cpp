@@ -25,8 +25,8 @@ int output_cell_height,
     const height = pixmap_heights[(int)glyph];
     // We have a pixmap representing glyph of width x height dimensions
     // that we want to render into a cell of output_cell_width x output_cell_height dimensions.
-   // This is further complicated by needing to find the start index of our pixmap in dense_pixmaps
-   // as they are of non-uniform dimensions.
+    // This is further complicated by needing to find the start index of our pixmap in dense_pixmaps
+    // as they are of non-uniform dimensions.
 }
 
 )SRC";
