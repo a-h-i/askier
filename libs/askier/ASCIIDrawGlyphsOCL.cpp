@@ -79,8 +79,7 @@ cv::Mat ascii_draw_glyphs_ocl(
         pixmapHeight,
         cv::ocl::KernelArg::WriteOnly(dst)
     );
-    cv::resize(dst, dst, cv::Size(dstCols, dstRows));
-    size_t globals[2] = {static_cast<size_t>(1), static_cast<size_t>(1)};
+    size_t globals[2] = {static_cast<size_t>(glyphs.cols), static_cast<size_t>(glyphs.rows)};
     bool run_ok = kernel.run(2, globals, nullptr, true);
     CV_Assert(run_ok);
     return dst.getMat(cv::ACCESS_READ).clone();
