@@ -29,9 +29,11 @@ QImage AsciiRenderer::render(const std::vector<QString> &lines) const {
     painter.setPen(Qt::black);
     painter.setFont(font);
 
-    for (int row = 0; row < rows; row++) {
-        painter.drawText(0, row * cell_height, columns * cell_width, cell_height, Qt::AlignLeft, lines[row]);
-    }
+    QString line = std::reduce(std::begin(lines) + 1, std::end(lines), lines.front(),
+                               [](const QString &a, const QString &b) {
+                                   return a + '\n' + b;
+                               });
+    painter.drawText(0, 0, columns * cell_width, cell_height * rows, Qt::AlignLeft, line);
     painter.end();
     return img;
 }
