@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <opencv2/core/ocl.hpp>
 #include <iostream>
-#include <CL/cl2.hpp>
+#include <CL/opencl.hpp>
 
 int main(int argc, char **argv) {
     std::cout << std::boolalpha << "OpenCL available: " << cv::ocl::haveOpenCL() << std::endl;
