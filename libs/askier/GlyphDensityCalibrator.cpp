@@ -144,10 +144,10 @@ void GlyphDensityCalibrator::calibrate() {
         std::vector<uchar> pixmap;
 
         for (int y = 0; y < cell_height; ++y) {
-            const uchar *row = bits + y * stride;
-            for (int x = 0; x < cell_width; ++x) {
-                const double gray = row[x];
-                pixmap.push_back(row[x]);
+            const uchar *row = bits + row * stride;
+            for (int column = 0; column < cell_width; ++column) {
+                const double gray = row[column];
+                pixmap.push_back(row[column]);
                 sum += 1.0 - gray / 255.0;
             }
         }
