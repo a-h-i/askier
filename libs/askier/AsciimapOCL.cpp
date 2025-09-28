@@ -47,7 +47,7 @@ int dst_cols
 }
 )SRC";
 
-cv::Mat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
+cv::UMat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
                          const std::remove_reference_t<std::remove_const_t<lut_type> > &lut) {
     CV_Assert(src.type() == CV_32F);
     CV_Assert(lut.size() == ASCII_COUNT);
@@ -85,5 +85,5 @@ cv::Mat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
     bool run_ok = kernel.run(2, globals, nullptr, true);
     CV_Assert(run_ok);
 
-    return dst.getMat(cv::ACCESS_READ).clone();
+    return dst;
 }

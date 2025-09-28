@@ -1,5 +1,6 @@
 #include "askier/AsciiPipeline.hpp"
 
+#include <future>
 #include <iostream>
 #include <ranges>
 
@@ -69,9 +70,13 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     Result result;
     result.lines.resize(rows);
 
-    auto mappedMatrix = ascii_mapper_ocl(clContext, cells, calibrator->lut());
+    auto mappedUMatrix = ascii_mapper_ocl(clContext, cells, calibrator->lut());
 
-    oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),
+    auto mappedMatrix = mappedUMatrix.getMat(cv::ACCESS_READ).clone();
+
+    auto linesMappingFuture = std::async(std::launch::async, [&mappedUMatrix, &result]() {
+        auto mappedMatrix = mappedUMatrix.getMat(cv::ACCESS_READ).clone();
+        oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),
                               [&mappedMatrix, &result](const oneapi::tbb::blocked_range<int> &range) {
                                   for (int row = range.begin(); row < range.end(); ++row) {
                                       QString line;
@@ -83,6 +88,11 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
                                       result.lines[row] = std::move(line);
                                   }
                               });
+    });
+
+
+    linesMappingFuture.wait();
+
 
     const AsciiRenderer renderer(calibrator->font());
     result.preview = renderer.render(result.lines);
