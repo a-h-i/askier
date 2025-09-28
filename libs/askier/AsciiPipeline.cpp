@@ -69,7 +69,6 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     Result result;
     result.lines.resize(rows);
 
-
     auto mappedMatrix = ascii_mapper_ocl(clContext, cells, calibrator->lut());
 
     oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),

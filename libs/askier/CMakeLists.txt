@@ -11,6 +11,7 @@ SET(SOURCE_LIST
         AsciimapOCL.cpp
         OrderedDither.cpp
         FloydSteinbergDither.cpp
+        ASCIIDrawGlyphsOCL.cpp
 )
 
 add_library(askier ${SOURCE_LIST} ${HEADER_FILES})

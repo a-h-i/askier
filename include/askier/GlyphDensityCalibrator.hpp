@@ -17,9 +17,12 @@ public:
 
     void ensureCalibrated();
 
-    const auto &lut() const { return lut_; }
-    double cellAspect() const { return aspect; }
-    const QFont &font() const { return font_; }
+    [[nodiscard]] const auto &lut() const { return lut_; }
+    [[nodiscard]] double cellAspect() const { return aspect; }
+    [[nodiscard]] const QFont &font() const { return font_; }
+    [[nodiscard]] const auto &pixmaps() const { return pixmaps_ };
+    [[nodiscard]] const auto &pixmapWidths() const { return pixmap_widths; }
+    [[nodiscard]] const auto &pixmapHeights() const { return pixmap_heights; }
 
 private:
     QFont font_;
