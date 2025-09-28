@@ -20,6 +20,13 @@ AsciiPipeline::AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &cali
     auto device = cv::ocl::Context::getDefault().device(0);
     clContext = cv::ocl::Context::fromDevice(device);
     std::cout << "Using device: " << device.name() << std::endl;
+    const auto &lut = this->calibrator->lut();
+    cv::Mat hostLut(1, static_cast<int>(lut.size()), CV_8UC1);
+    for (size_t i = 0; i < lut.size(); i++) {
+        hostLut.at<uchar>(0, static_cast<int>(i), 0) = lut[i];
+    }
+    deviceLut = hostLut.getUMat(cv::ACCESS_READ).clone();
+
 }
 
 
@@ -70,7 +77,7 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     Result result;
     result.lines.resize(rows);
 
-    auto mappedUMatrix = ascii_mapper_ocl(clContext, cells, calibrator->lut());
+    auto mappedUMatrix = ascii_mapper_ocl(clContext, cells, deviceLut);
 
 
     auto linesMappingFuture = std::async(std::launch::async, [&mappedUMatrix, &result]() {

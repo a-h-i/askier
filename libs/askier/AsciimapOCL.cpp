@@ -48,16 +48,12 @@ int dst_cols
 )SRC";
 
 cv::UMat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
-                         const std::remove_reference_t<std::remove_const_t<lut_type> > &lut) {
+                         const cv::UMat &deviceLut) {
     CV_Assert(src.type() == CV_32F);
-    CV_Assert(lut.size() == ASCII_COUNT);
+    CV_Assert(deviceLut.type() == CV_8UC1);
+    CV_Assert(deviceLut.rows == 1);
+    CV_Assert(deviceLut.cols == ASCII_COUNT);
     cv::UMat dst(src.size(), CV_8UC1, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
-
-    cv::Mat hostLut(1, static_cast<int>(lut.size()), CV_8UC1);
-    for (size_t i = 0; i < lut.size(); i++) {
-        hostLut.at<uchar>(0, static_cast<int>(i), 0) = lut[i];
-    }
-    cv::UMat deviceLut = hostLut.getUMat(cv::ACCESS_READ);
 
     cv::ocl::ProgramSource source(kernel_source);
     std::string compileErrors;
@@ -68,15 +64,14 @@ cv::UMat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
     cv::ocl::Kernel kernel("ascii_map_lut", program);
     CV_Assert(!kernel.empty());
     CV_Assert(src.isContinuous());
-    CV_Assert(hostLut.isContinuous());
     CV_Assert(deviceLut.isContinuous());
     CV_Assert(dst.isContinuous());
-    CV_Assert(!hostLut.empty());
+    CV_Assert(!deviceLut.empty());
 
     kernel.args(
         cv::ocl::KernelArg::ReadOnly(src),
         cv::ocl::KernelArg::PtrReadOnly(deviceLut),
-        static_cast<int>(lut.size()),
+        ASCII_COUNT,
         cv::ocl::KernelArg::WriteOnly(dst)
     );
 

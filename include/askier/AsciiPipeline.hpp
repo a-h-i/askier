@@ -41,4 +41,5 @@ public:
 private:
     std::shared_ptr<GlyphDensityCalibrator> calibrator;
     cv::ocl::Context clContext;
+    cv::UMat deviceLut, deviceDensePixmaps, devicePixmapWidths, devicePixmapHeights;
 };
