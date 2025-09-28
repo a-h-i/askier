@@ -74,19 +74,19 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
 
 
     auto linesMappingFuture = std::async(std::launch::async, [&mappedUMatrix, &result]() {
-        auto mappedMatrix = mappedUMatrix.getMat(cv::ACCESS_READ).clone();
+        const auto mappedMatrix = mappedUMatrix.getMat(cv::ACCESS_READ);
         oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),
-                              [&mappedMatrix, &result](const oneapi::tbb::blocked_range<int> &range) {
-                                  for (int row = range.begin(); row < range.end(); ++row) {
-                                      QString line;
-                                      line.reserve(mappedMatrix.cols);
-                                      const uchar *row_ptr = mappedMatrix.ptr<uchar>(row);
-                                      for (int col = 0; col < mappedMatrix.cols; ++col) {
-                                          line.push_back(QChar::fromLatin1(row_ptr[col]));
+                                  [&mappedMatrix, &result](const oneapi::tbb::blocked_range<int> &range) {
+                                      for (int row = range.begin(); row < range.end(); ++row) {
+                                          QString line;
+                                          line.reserve(mappedMatrix.cols);
+                                          const auto *row_ptr = mappedMatrix.ptr<uchar>(row);
+                                          for (int col = 0; col < mappedMatrix.cols; ++col) {
+                                              line.push_back(QChar::fromLatin1(static_cast<char>(row_ptr[col])));
+                                          }
+                                          result.lines[row] = std::move(line);
                                       }
-                                      result.lines[row] = std::move(line);
-                                  }
-                              });
+                                  });
     });
 
 
