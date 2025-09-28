@@ -8,7 +8,7 @@
 #include <CL/cl2.hpp>
 
 int main(int argc, char **argv) {
-    std::cout << "OpenCL available: " << cv::ocl::haveOpenCL() << std::endl;
+    std::cout << std::boolalpha << "OpenCL available: " << cv::ocl::haveOpenCL() << std::endl;
     if (cv::ocl::haveOpenCL()) {
         cv::ocl::setUseOpenCL(true);
     }
@@ -20,9 +20,8 @@ int main(int argc, char **argv) {
         std::cout << "Platform Vendor: " << platform.getInfo<CL_PLATFORM_VENDOR>() << std::endl;
         std::vector<cl::Device> devices;
         platform.getDevices(CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_CPU, &devices);
-
         for (const auto& device: devices) {
-            std::cout << "\t\tDevice Name: " << device.getInfo<CL_DEVICE_NAME>() << std::endl;
+            std::cout << "\tDevice: " << device.getInfo<CL_DEVICE_NAME>() << std::endl;
             std::cout << "\t\tDevice Vendor: " << device.getInfo<CL_DEVICE_VENDOR>() << std::endl;
             std::cout << "\t\tDevice Version: " << device.getInfo<CL_DEVICE_VERSION>() << std::endl;
             std::cout << "\t\tDevice Max Compute Units: " << device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << std::endl;
@@ -44,6 +43,7 @@ int main(int argc, char **argv) {
             }
         }
     }
+    std::cout << std::noboolalpha;
 
     QApplication app(argc, argv);
     const std::string appname = ASKIER_NAME;
