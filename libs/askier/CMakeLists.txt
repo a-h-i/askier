@@ -9,6 +9,8 @@ SET(SOURCE_LIST
         AsciiPipeline.cpp
         ImageUtils.cpp
         AsciimapOCL.cpp
+        OrderedDither.cpp
+        FloydSteinbergDither.cpp
 )
 
 add_library(askier ${SOURCE_LIST} ${HEADER_FILES})

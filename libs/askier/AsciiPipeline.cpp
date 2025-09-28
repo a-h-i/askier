@@ -10,84 +10,7 @@
 #include "askier/AsciimapOCL.hpp"
 #include "askier/AsciiRenderer.hpp"
 #include "askier/ImageUtils.hpp"
-
-
-/**
- * Applies an ordered dithering effect to the given matrix of grayscale cell values
- * using a 4x4 Bayer matrix. The resulting matrix values will be adjusted to add a
- * dithering effect while preserving their range within [0,1].
- * https://en.wikipedia.org/wiki/Ordered_dithering
- * @param cells A cv::Mat of type CV_32FC1 (single-channel 32-bit floating point)
- *              containing grayscale values normalized to the range [0,1].
- *
- */
-static void applyOrderedDither(cv::Mat &cells) {
-    static const float bayer4x4[4][4] = {
-        {0, 8, 2, 10},
-        {12, 4, 14, 6},
-        {3, 11, 1, 9},
-        {15, 7, 13, 5}
-    };
-    // Normalize to [0,1): t = b/16, bias around zero by subtracting 0.5, scale strength.
-    constexpr float invN = 1.0f / 16.0f;
-    constexpr float strength = 1.0f / 16.0f; // smaller = subtler pattern
-
-    for (int r = 0; r < cells.rows; ++r) {
-        float *row = cells.ptr<float>(r);
-        for (int c = 0; c < cells.cols; ++c) {
-            const float t = bayer4x4[r & 3][c & 3] * invN; // [0,1)
-            float v = row[c] + (t - 0.5f) * strength; // bias around 0
-            row[c] = std::clamp(v, 0.0f, 1.0f);
-        }
-    }
-}
-
-
-/**
- * Apply Floyd-Steinberg dithering to the input matrix of grayscale values,
- * diffusing quantization errors to neighboring pixels to improve the visual
- * representation of quantized levels.
- *
- * The dithering process works in-place on the input matrix. It adjusts the
- * pixel values to the nearest quantization level and spreads the quantization
- * error to neighboring pixels using standard Floyd-Steinberg error diffusion
- * weights.
- * https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
- * @param cells A cv::Mat representing the grayscale image; pixel values must
- *              be in the range [0.0, 1.0]. The matrix is modified in-place.
- * @param levels The number of quantization levels, clamped to the range [2, 256].
- *               Defaults to 32.
- */
-static void applyFloydSteinberg(cv::Mat &cells, int levels = 32) {
-    levels = std::max(2, std::min(256, levels));
-    const float scale = static_cast<float>(levels - 1);
-    // Work in-place, processing left-to-right, top-to-bottom.
-    for (int y = 0; y < cells.rows; ++y) {
-        float *row = cells.ptr<float>(y);
-        float *rowDown = (y + 1 < cells.rows) ? cells.ptr<float>(y + 1) : nullptr;
-        for (int x = 0; x < cells.cols; ++x) {
-            float oldV = std::clamp(row[x], 0.0f, 1.0f);
-            float q = std::round(oldV * scale) / scale; // quantized luminance
-            row[x] = q;
-            float err = oldV - q;
-            // Distribute error to neighbors (classic FS weights)
-            if (x + 1 < cells.cols) row[x + 1] += err * (7.0f / 16.0f);
-            if (rowDown) {
-                if (x > 0) rowDown[x - 1] += err * (3.0f / 16.0f);
-                rowDown[x] += err * (5.0f / 16.0f);
-                if (x + 1 < cells.cols) rowDown[x + 1] += err * (1.0f / 16.0f);
-            }
-        }
-    }
-    // Clamp once after diffusion to keep values in range
-    for (int y = 0; y < cells.rows; ++y) {
-        float *row = cells.ptr<float>(y);
-        for (int x = 0; x < cells.cols; ++x) {
-            row[x] = std::clamp(row[x], 0.0f, 1.0f);
-        }
-    }
-}
-
+#include "askier/Dithering.hpp"
 
 AsciiPipeline::AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &calibrator) : calibrator(calibrator) {
 }
@@ -130,19 +53,18 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     cv::UMat cells(outputSize, CV_32F, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
     cv::resize(gray, cells, outputSize, 0, 0, cv::INTER_AREA);
 
-    cv::Mat cellsCpu = cells.getMat(cv::ACCESS_READ);
 
     if (params.dithering == DitheringType::FloydSteinberg) {
-        applyFloydSteinberg(cellsCpu, 32);
+        applyFloydSteinberg(cells, 32);
     } else if (params.dithering == DitheringType::Ordered) {
-        applyOrderedDither(cellsCpu);
+        applyOrderedDither(cells);
     }
 
     Result result;
     result.lines.resize(rows);
 
 
-    auto mappedMatrix = ascii_mapper_ocl(cellsCpu.getUMat(cv::ACCESS_READ), calibrator->lut());
+    auto mappedMatrix = ascii_mapper_ocl(cells, calibrator->lut());
 
     oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),
                               [&mappedMatrix, &result](const oneapi::tbb::blocked_range<int> &range) {
@@ -160,8 +82,7 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     const AsciiRenderer renderer(calibrator->font());
     result.preview = renderer.render(result.lines);
     cv::Mat midImage;
-    cellsCpu = cellsCpu * 255;
-    cellsCpu.convertTo(midImage, CV_8UC1);
+    cells.convertTo(midImage, CV_8UC1, 255);
     result.midImage = matToQImageGray(midImage);
     return result;
 }

@@ -4,7 +4,6 @@
 #include <opencv2/core/ocl.hpp>
 
 #include "askier/GlyphDensityCalibrator.hpp"
-#include <iostream>
 
 
 static std::string kernel_source = R"SRC(
@@ -66,8 +65,7 @@ cv::Mat ascii_mapper_ocl(const cv::UMat &src, const std::remove_reference_t<std:
     std::string compileErrors;
     cv::ocl::Program program = context.getProg(source, "", compileErrors);
     if (program.empty()) {
-        std::cerr << "Issue with program compilation\n"
-                << compileErrors << std::endl;
+        throw std::runtime_error("OpenCL ascii mapper compilaton failed" + compileErrors);
     }
     cv::ocl::Kernel kernel("ascii_map_lut", program);
     CV_Assert(!kernel.empty());
