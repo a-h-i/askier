@@ -25,7 +25,7 @@ kernel void ascii_map_glyphs(
      const int y = get_global_id(1);
      const int glyph_idx = y * glyphs_step + x + glyphs_offset;
      const uchar glyph = glyphs[glyph_idx];
-     const int pixmap_glyph_idx = glyph;
+     const int pixmap_glyph_idx = glyph - 32;
      const int pixmap_start_offset = pixmap_glyph_idx * pixmap_height * pixmap_width;
      const int dst_y_start_offset = y * pixmap_height;
      const int dst_x_start_offset = x * pixmap_width;

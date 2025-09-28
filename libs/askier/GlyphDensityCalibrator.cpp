@@ -101,12 +101,12 @@ void GlyphDensityCalibrator::saveCache() {
 
 void GlyphDensityCalibrator::calibrate() {
     QFontMetrics metrics(font_);
-    const int cell_width = std::max(10, metrics.horizontalAdvance("M"));
-    const int cell_height = std::max(10, metrics.height());
+    const int cell_width = std::max(100, metrics.horizontalAdvance("M"));
+    const int cell_height = std::max(100, metrics.height());
 
     aspect = static_cast<double>(cell_height) / static_cast<double>(cell_width);
 
-    // Render each printable ASCII glyph on white background and measure ink coverage;
+    // Render each printable ASCII glyph on a white background and measure ink coverage;
     struct GlyphDensity {
         char c;
         double density;
@@ -115,6 +115,9 @@ void GlyphDensityCalibrator::calibrate() {
     };
     std::vector<GlyphDensity> glyphs;
     glyphs.reserve(ASCII_COUNT);
+    pixmaps_.resize(
+        ASCII_COUNT * cell_height * cell_width
+    );
 
     for (int c = ASCII_MIN; c <= ASCII_MAX; ++c) {
         QImage img(cell_width, cell_height, QImage::Format_Grayscale8);
@@ -141,13 +144,13 @@ void GlyphDensityCalibrator::calibrate() {
         const uchar *bits = img.constBits();
         const int stride = img.bytesPerLine();
         double sum = 0.0;
-        std::vector<uchar> pixmap;
 
         for (int y = 0; y < cell_height; ++y) {
             const uchar *row = bits + y * stride;
             for (int column = 0; column < cell_width; ++column) {
                 const double gray = row[column];
-                pixmap.push_back(row[column]);
+
+
                 sum += 1.0 - gray / 255.0;
             }
         }

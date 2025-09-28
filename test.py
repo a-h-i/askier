@@ -1,0 +1,34 @@
+import json
+import numpy as np
+import cv2 as cv
+
+
+with open("/home/ahi/.local/share/askier/ascii_lut_v0.0.3_Monospace_12.json", "r") as fp:
+    font_file = json.load(fp)
+
+print(font_file.keys())
+pixmap = np.array(font_file.get('pixmap'))
+height = font_file.get('pixmap_heights')[0]
+width = font_file.get('pixmap_widths')[0]
+pmap_area = height * width
+# grid_height = int((len(pixmap) // pmap_area) ** 0.5)
+# grid_width = math.ceil((len(pixmap) // pmap_area) / grid_height)
+# grid = np.zeros_like((grid_height * height, grid_width * width)) + 127
+pmaps = []
+pmap_idx = 80 - 32
+pmap = pixmap[pmap_idx:pmap_idx + pmap_area]
+pmap = np.array(pmap).reshape((height, width))
+print(pmap.min(), pmap.max())
+pmap = pmap.astype('uint8')
+pmaps.append(pmap)
+# output = np.concatenate(pmaps, 0)
+# grid = np.zeros((10 * height, 10 * width))
+# for i, pmap in enumerate(pmaps):
+#     print(type(pmap), type(i))
+#     y = i // 10
+#     x = i % 10
+#     grid[y:y+height, x:x+width] = pmap
+#     break
+cv.imshow('pixel map', cv.resize(pixmap, (10 * 19, 22 * 5)))
+cv.waitKey(0)
+# print(len(pmaps))
