@@ -1,6 +1,7 @@
 #pragma once
 
 #include <opencv2/core/mat.hpp>
+#include <opencv2/core/ocl.hpp>
 
 /**
 * Applies an ordered dithering effect to the given matrix of grayscale cell values
@@ -27,5 +28,6 @@ void applyOrderedDither(cv::UMat &cells);
  *              be in the range [0.0, 1.0]. The matrix is modified in-place.
  * @param levels The number of quantization levels, clamped to the range [2, 256].
  *               Defaults to 32.
+ * @param context opencl context
  */
-void applyFloydSteinberg(cv::UMat &cells, int levels = 32);
+void applyFloydSteinberg(cv::ocl::Context &context, cv::UMat &cells, int levels = 32);

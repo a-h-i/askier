@@ -1,5 +1,6 @@
 #include "askier/AsciimapOCL.hpp"
 
+#include <iostream>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/ocl.hpp>
 
@@ -48,7 +49,7 @@ int dst_cols
 }
 )SRC";
 
-cv::Mat ascii_mapper_ocl(const cv::UMat &src, const std::remove_reference_t<std::remove_const_t<lut_type> > &lut) {
+cv::Mat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src, const std::remove_reference_t<std::remove_const_t<lut_type> > &lut) {
     CV_Assert(src.type() == CV_32F);
     CV_Assert(lut.size() == ASCII_COUNT);
     cv::UMat dst(src.size(), CV_8UC1, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
@@ -59,13 +60,11 @@ cv::Mat ascii_mapper_ocl(const cv::UMat &src, const std::remove_reference_t<std:
     }
     cv::UMat deviceLut = hostLut.getUMat(cv::ACCESS_READ);
 
-    auto context = cv::ocl::Context::getDefault();
-
     cv::ocl::ProgramSource source(kernel_source);
     std::string compileErrors;
     cv::ocl::Program program = context.getProg(source, "", compileErrors);
     if (program.empty()) {
-        throw std::runtime_error("OpenCL ascii mapper compilaton failed" + compileErrors);
+        throw std::runtime_error("OpenCL ascii mapper compilation failed" + compileErrors);
     }
     cv::ocl::Kernel kernel("ascii_map_lut", program);
     CV_Assert(!kernel.empty());

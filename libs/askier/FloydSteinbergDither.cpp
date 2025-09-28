@@ -51,7 +51,7 @@ kernel void floyd_steinberg_serpentine(
 )SRC";
 
 
-void applyFloydSteinberg(cv::UMat &cells, int levels) {
+void applyFloydSteinberg(cv::ocl::Context &context, cv::UMat &cells, int levels) {
     levels = std::clamp(levels, 2, 256);
     CV_Assert(cells.type() == CV_32F && cells.channels() == 1);
     // Ensure we have a contiguous buffer in row-major cols stride
@@ -62,7 +62,6 @@ void applyFloydSteinberg(cv::UMat &cells, int levels) {
         cells.copyTo(continuous);
     }
 
-    auto context = cv::ocl::Context::getDefault();
     std::string compileErrors;
     cv::ocl::ProgramSource source(fs_kernel_src);
     cv::ocl::Program program = context.getProg(source, "", compileErrors);

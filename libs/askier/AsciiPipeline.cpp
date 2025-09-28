@@ -1,5 +1,6 @@
 #include "askier/AsciiPipeline.hpp"
 
+#include <iostream>
 #include <ranges>
 
 #include "askier/AsciiMapper.hpp"
@@ -13,10 +14,15 @@
 #include "askier/Dithering.hpp"
 
 AsciiPipeline::AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &calibrator) : calibrator(calibrator) {
+    std::cout << "Using OpenCL: " << cv::ocl::haveOpenCL() << std::endl;
+    std::cout << "Number devices: " << cv::ocl::Context::getDefault().ndevices() << std::endl;
+    auto device  = cv::ocl::Context::getDefault().device(0);
+    clContext = cv::ocl::Context::fromDevice(device);
+    std::cout << "Using device: " << device.name() << std::endl;
 }
 
 
-AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiParams &params) const {
+AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiParams &params) {
     if (bgr.empty()) {
         return Result();
     }
@@ -55,7 +61,7 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
 
 
     if (params.dithering == DitheringType::FloydSteinberg) {
-        applyFloydSteinberg(cells, 32);
+        applyFloydSteinberg(clContext, cells, 32);
     } else if (params.dithering == DitheringType::Ordered) {
         applyOrderedDither(cells);
     }
@@ -64,7 +70,7 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     result.lines.resize(rows);
 
 
-    auto mappedMatrix = ascii_mapper_ocl(cells, calibrator->lut());
+    auto mappedMatrix = ascii_mapper_ocl(clContext, cells, calibrator->lut());
 
     oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),
                               [&mappedMatrix, &result](const oneapi::tbb::blocked_range<int> &range) {
