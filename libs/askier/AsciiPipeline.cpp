@@ -26,6 +26,27 @@ AsciiPipeline::AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &cali
         hostLut.at<uchar>(0, static_cast<int>(i), 0) = lut[i];
     }
     deviceLut = hostLut.getUMat(cv::ACCESS_READ).clone();
+    const auto &pixmaps = this->calibrator->pixmaps();
+    cv::Mat hostDensePixmaps(1, static_cast<int>(pixmaps.size()), CV_8UC1);
+    for (size_t i = 0; i < pixmaps.size(); i++) {
+        hostDensePixmaps.at<uchar>(0, static_cast<int>(i), 0) = pixmaps[i];
+    }
+    deviceDensePixmaps = hostDensePixmaps.getUMat(cv::ACCESS_READ).clone();
+    const auto &pixmapWidths = this->calibrator->pixmapWidths();
+    cv::Mat hostPixmapWidths(1, static_cast<int>(pixmapWidths.size()), CV_8UC1);
+
+    for (size_t i = 0; i < pixmapWidths.size(); i++) {
+        hostPixmapWidths.at<uchar>(0, static_cast<int>(i), 0) = pixmapWidths[i];
+    }
+    devicePixmapWidths = hostPixmapWidths.getUMat(cv::ACCESS_READ).clone();
+
+    const auto &pixmapHeights = this->calibrator->pixmapHeights();
+    cv::Mat hostPixmapHeights(1, static_cast<int>(pixmapHeights.size()), CV_8UC1);
+    for (size_t i = 0; i < pixmapHeights.size(); i++) {
+        hostPixmapHeights.at<uchar>(0, static_cast<int>(i), 0) = pixmapHeights[i];
+    }
+    devicePixmapHeights = hostPixmapWidths.getUMat(cv::ACCESS_READ).clone();
+
 
 }
 
