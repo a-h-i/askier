@@ -119,12 +119,11 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr,
         });
   });
   const auto display = ascii_draw_glyphs_ocl(
-      clContext, mappedUMatrix, deviceDensePixmaps, pixmapWidth, pixmapHeight,
+      clContext, mappedUMatrix.clone(), deviceDensePixmaps, pixmapWidth, pixmapHeight,
       pixmapWidth, pixmapHeight);
 
-  const AsciiRenderer renderer(calibrator->font());
   linesMappingFuture.wait();
-  result.preview = renderer.render(result.lines);
+  result.preview = matToQImageGray(display);
   cv::Mat midImage;
   cells.convertTo(midImage, CV_8UC1, 255);
   result.midImage = matToQImageGray(midImage);

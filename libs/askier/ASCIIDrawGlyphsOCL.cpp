@@ -7,37 +7,40 @@
 
 static std::string kernel_source = R"SRC(
 kernel void ascii_map_glyphs(
-// __global const uchar *glyphs,
-// int glyphs_step,
-// int glyphs_offset,
-// int glyphs_rows,
-// int glyphs_cols,
-// __global const uchar *dense_pixmaps,
-// int pixmap_width,
-// int pixmap_height
-// __global uchar *dst,
-// int dst_cols
+    __global const uchar *glyphs,
+    int glyphs_step,
+    int glyphs_offset,
+    int glyphs_rows,
+    int glyphs_cols,
+    __global const uchar *dense_pixmaps,
+    int pixmap_width,
+    int pixmap_height,
+    __global uchar *dst,
+    int dst_step,
+    int dst_offset,
+    int dst_rows,
+    int dst_cols
 ) {
-    // const int x = get_global_id(0);
-    // const int y = get_global_id(1);
-    // const int glyph_idx = y * glyphs_step + x + glyphs_offset;
-    // const uchar glyph = glyphs[glyph_idx];
-    // const int pixmap_glyph_idx = glyph - 32;
-    // const int pixmap_start_offset = pixmap_glyph_idx * pixmap_height * pixmap_width;
-    // const int dst_y_start_offset = y * pixmap_height;
-    // const int dst_x_start_offset = x * pixmap_width;
-    // for(int pmap_y = 0; pmap_y < pixmap_height; ++pmap_y) {
-    //     const int dst_y = dst_y_start_offset + pmap_y;
-    //     for(int pmap_x = 0; pmap_x < pixmap_width; ++pmap_x) {
-    //         const int dst_x = dst_x_start_offset + pmap_x;
-    //         const int dst_idx = dst_y * dst_cols + dst_x;
-    //         const int pmap_idx = pmap_y * pixmap_width + pmap_x + pixmap_start_offset;
-    //         dst[dst_idx] = dense_pixmaps[pmap_idx];
-    //     }
-    // }
-    printf("hello world!\n");
+     const int x = get_global_id(0);
+     const int y = get_global_id(1);
+     const int glyph_idx = y * glyphs_step + x + glyphs_offset;
+     const uchar glyph = glyphs[glyph_idx];
+     const int pixmap_glyph_idx = glyph - 32;
+     const int pixmap_start_offset = pixmap_glyph_idx * pixmap_height * pixmap_width;
+     const int dst_y_start_offset = y * pixmap_height;
+     const int dst_x_start_offset = x * pixmap_width;
+     for(int pmap_y = 0; pmap_y < pixmap_height; ++pmap_y) {
+         const int dst_y = dst_y_start_offset + pmap_y;
+         for(int pmap_x = 0; pmap_x < pixmap_width; ++pmap_x) {
+             const int dst_x = dst_x_start_offset + pmap_x;
+             const int dst_idx = dst_y * dst_cols + dst_x;
+             const int pmap_idx = pmap_y * pixmap_width + pmap_x + pixmap_start_offset;
+             dst[dst_idx] = 255;
+         }
+     }
 }
 )SRC";
+
 cv::Mat ascii_draw_glyphs_ocl(
     cv::ocl::Context &context,
     const cv::UMat &glyphs,
@@ -51,12 +54,13 @@ cv::Mat ascii_draw_glyphs_ocl(
     CV_Assert(densePixmaps.type() == CV_8U);
     CV_Assert(outputCellWidth >= 1);
     CV_Assert(outputCellHeight >= 1);
+    const int dstCols = glyphs.cols * outputCellWidth;
+    const int dstRows = glyphs.rows * outputCellHeight;
 
-    cv::UMat dst(cv::Size(glyphs.cols * outputCellWidth, glyphs.rows * outputCellHeight), CV_8UC1,
+    cv::UMat dst(cv::Size(dstCols, dstRows), CV_8UC1,
                  cv::USAGE_ALLOCATE_DEVICE_MEMORY);
-    const int dstCols = dst.cols;
-    const int dstRows = dst.rows;
-    cv::resize(dst, dst, cv::Size(dst.rows * dst.cols, 1));
+    dst.setTo(0);
+
     cv::ocl::ProgramSource source(kernel_source);
     std::string compileErrors;
     cv::ocl::Program program = context.getProg(source, "", compileErrors);
@@ -68,14 +72,13 @@ cv::Mat ascii_draw_glyphs_ocl(
     CV_Assert(densePixmaps.isContinuous());
     CV_Assert(dst.isContinuous());
 
-    // kernel.args(
-    //     cv::ocl::KernelArg::ReadOnly(glyphs),
-    //     cv::ocl::KernelArg::PtrReadOnly(densePixmaps),
-    //     pixmapWidth,
-    //     pixmapHeight
-    //     // cv::ocl::KernelArg::PtrWriteOnly(dst),
-    //     // dstCols
-    // );
+    kernel.args(
+        cv::ocl::KernelArg::ReadOnly(glyphs),
+        cv::ocl::KernelArg::PtrReadOnly(densePixmaps),
+        pixmapWidth,
+        pixmapHeight,
+        cv::ocl::KernelArg::WriteOnly(dst)
+    );
     cv::resize(dst, dst, cv::Size(dstCols, dstRows));
     size_t globals[2] = {static_cast<size_t>(1), static_cast<size_t>(1)};
     bool run_ok = kernel.run(2, globals, nullptr, true);
