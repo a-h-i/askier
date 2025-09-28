@@ -35,6 +35,11 @@ int dst_cols
 
     const int max_lut_index = lut_size - 1;
     int darkness_index = (int) round(darkness * max_lut_index);
+    if (darkness_index < 0) {
+        darkness_index = 0;
+    } if (darkness_index > max_lut_index) {
+        darkness_index = max_lut_index;
+    }
     dst[dst_idx] = lut[darkness_index];
 
 
