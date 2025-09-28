@@ -90,10 +90,10 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
     });
 
 
-    linesMappingFuture.wait();
 
 
     const AsciiRenderer renderer(calibrator->font());
+    linesMappingFuture.wait();
     result.preview = renderer.render(result.lines);
     cv::Mat midImage;
     cells.convertTo(midImage, CV_8UC1, 255);
