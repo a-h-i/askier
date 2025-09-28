@@ -3,7 +3,7 @@
 #include "askier/Dithering.hpp"
 
 
- void applyOrderedDither(cv::UMat &cells) {
+void applyOrderedDither(cv::UMat &cells) {
     // Bayer 4x4 pattern as CV_32F
     static const float bayerData[16] = {
         0, 8, 2, 10,
@@ -11,7 +11,7 @@
         3, 11, 1, 9,
         15, 7, 13, 5
     };
-    cv::Mat bayer4x4(4, 4, CV_32F, const_cast<float*>(bayerData));
+    cv::Mat bayer4x4(4, 4, CV_32F, const_cast<float *>(bayerData));
     // Normalize to [0,1): t = b/16, bias around zero by subtracting 0.5, scale strength.
     constexpr float invN = 1.0f / 16.0f;
     cv::UMat bayer;

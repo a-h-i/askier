@@ -16,7 +16,7 @@
 AsciiPipeline::AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &calibrator) : calibrator(calibrator) {
     std::cout << "Using OpenCL: " << cv::ocl::haveOpenCL() << std::endl;
     std::cout << "Number devices: " << cv::ocl::Context::getDefault().ndevices() << std::endl;
-    auto device  = cv::ocl::Context::getDefault().device(0);
+    auto device = cv::ocl::Context::getDefault().device(0);
     clContext = cv::ocl::Context::fromDevice(device);
     std::cout << "Using device: " << device.name() << std::endl;
 }

@@ -30,7 +30,6 @@ ConversionParamsDialog::ConversionParamsDialog(const AsciiParams &currentParams,
     connect(dithering_combo, &QComboBox::currentTextChanged, this, &ConversionParamsDialog::onDitheringChanged);
 
 
-
     apply_button = new QPushButton("Apply", this);
     connect(apply_button, &QPushButton::clicked, this, &ConversionParamsDialog::accept);
     cancel_button = new QPushButton("Cancel", this);
@@ -65,5 +64,3 @@ void ConversionParamsDialog::onDitheringChanged(const QString &text) {
         params.dithering = Ordered;
     }
 }
-
-

@@ -49,7 +49,8 @@ int dst_cols
 }
 )SRC";
 
-cv::Mat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src, const std::remove_reference_t<std::remove_const_t<lut_type> > &lut) {
+cv::Mat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
+                         const std::remove_reference_t<std::remove_const_t<lut_type> > &lut) {
     CV_Assert(src.type() == CV_32F);
     CV_Assert(lut.size() == ASCII_COUNT);
     cv::UMat dst(src.size(), CV_8UC1, cv::USAGE_ALLOCATE_DEVICE_MEMORY);

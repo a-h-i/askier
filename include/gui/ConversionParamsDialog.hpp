@@ -17,9 +17,10 @@ public:
 
 public
     slots:
-    
-    void onDitheringChanged(const QString &text);
 
+    
+
+    void onDitheringChanged(const QString &text);
 
 private:
     QLabel *label;

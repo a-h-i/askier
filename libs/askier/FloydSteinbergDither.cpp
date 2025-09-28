@@ -79,8 +79,7 @@ void applyFloydSteinberg(cv::ocl::Context &context, cv::UMat &cells, int levels)
         levels
     );
     // Global size: one work-item per row (row-serial, in-row sequential)
-    size_t global[1] = { static_cast<size_t>(cells.rows) };
+    size_t global[1] = {static_cast<size_t>(cells.rows)};
     const bool ok = kernel.run(1, global, nullptr, true);
     CV_Assert(ok);
-
 }
