@@ -22,4 +22,4 @@ add_subdirectory(apps)
 add_subdirectory(libs)
 
 
-install(TARGETS askier-gui)
+install(TARGETS askier-gui askier-cli)
