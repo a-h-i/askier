@@ -8,6 +8,7 @@ SET(SOURCE_LIST
         AsciiRenderer.cpp
         AsciiPipeline.cpp
         ImageUtils.cpp
+        AsciimapOCL.cpp
 )
 
 add_library(askier ${SOURCE_LIST} ${HEADER_FILES})

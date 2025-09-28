@@ -6,6 +6,7 @@
 #include <opencv2/imgproc.hpp>
 #include <pstl/glue_execution_defs.h>
 
+#include "askier/AsciimapOCL.hpp"
 #include "askier/AsciiRenderer.hpp"
 #include "askier/ImageUtils.hpp"
 
@@ -90,26 +91,6 @@ static void applyFloydSteinberg(cv::Mat &cells, int levels = 32) {
 AsciiPipeline::AsciiPipeline(const std::shared_ptr<GlyphDensityCalibrator> &calibrator) : calibrator(calibrator) {
 }
 
-struct LookupAsciiFunc {
-    int columns;
-    cv::Mat &cellsCpu;
-    AsciiPipeline::Result &result;
-    const AsciiMapper &mapper;
-
-    void operator()(const oneapi::tbb::blocked_range<int> &range) const {
-        for (int row = range.begin(); row != range.end(); ++row) {
-            QString line;
-            line.reserve(columns);
-            const float *row_ptr = cellsCpu.ptr<float>(row);
-            for (int col = 0; col < columns; ++col) {
-                const auto luminance = static_cast<double>(row_ptr[col]);
-                line.push_back(mapper.map(luminance));
-            }
-            result.lines[row] = std::move(line);
-        }
-    }
-};
-
 
 AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiParams &params) const {
     if (bgr.empty()) {
@@ -132,9 +113,9 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
 
     // Apply Sobel edge detection to highlight edges
     cv::UMat sobelX, sobelY, sobel;
-    cv::Sobel(gray, sobelX, CV_32F, 2, 0, 5);  // X gradient
-    cv::Sobel(gray, sobelY, CV_32F, 0, 2, 5);  // Y gradient
-    cv::magnitude(sobelX, sobelY, sobel);       // Combine gradients
+    cv::Sobel(gray, sobelX, CV_32F, 2, 0, 5); // X gradient
+    cv::Sobel(gray, sobelY, CV_32F, 0, 2, 5); // Y gradient
+    cv::magnitude(sobelX, sobelY, sobel); // Combine gradients
     //
     // Normalize Sobel result to [0, 1] range
     cv::UMat sobelNorm;
@@ -156,19 +137,26 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr, const AsciiPara
         applyOrderedDither(cellsCpu);
     }
 
-    const AsciiMapper mapper(calibrator);
     Result result;
     result.lines.resize(rows);
-    auto asciiRenderer = LookupAsciiFunc{
-        .columns = columns,
-        .cellsCpu = cellsCpu,
-        .result = result,
-        .mapper = mapper
-    };
 
+    cv::UMat cells8u(cellsCpu.size(), CV_8UC1, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+    cellsCpu.convertTo(cells8u, CV_8UC1);
 
-    oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, rows), asciiRenderer);
+    auto mappedMatrix = asciiMapOCL(cells8u, calibrator->lut());
 
+    oneapi::tbb::parallel_for(oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),
+                              [&mappedMatrix, &result](const oneapi::tbb::blocked_range<int> &range) {
+                                  for (int row = range.begin(); row < range.end(); ++row) {
+                                      QString line;
+                                      line.reserve(mappedMatrix.cols);
+                                      const uchar *row_ptr = mappedMatrix.ptr<uchar>(row);
+                                      for (int col = 0; col < mappedMatrix.cols; ++col) {
+                                          line.push_back(QChar::fromLatin1(row_ptr[col]));
+                                      }
+                                      result.lines[row] = std::move(line);
+                                  }
+                              });
 
     const AsciiRenderer renderer(calibrator->font());
     result.preview = renderer.render(result.lines);
