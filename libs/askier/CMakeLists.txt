@@ -4,7 +4,6 @@ SET(SOURCE_LIST
 
         VideoCaptureWorker.cpp
         GlyphDensityCalibrator.cpp
-        AsciiMapper.cpp
         AsciiRenderer.cpp
         AsciiPipeline.cpp
         ImageUtils.cpp
