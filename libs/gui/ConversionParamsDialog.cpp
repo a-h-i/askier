@@ -39,6 +39,9 @@ ConversionParamsDialog::ConversionParamsDialog(const AsciiParams &currentParams,
     colSlidersInnerLayout->addWidget(new QLabel(QString::number(columns_slider->maximum())));
 
     auto colsSliderOuterLayout = new QVBoxLayout();
+    auto colsLabel = new QLabel("Columns");
+    colsLabel->setAlignment(Qt::AlignCenter);
+    colsSliderOuterLayout->addWidget(colsLabel);
     colsSliderOuterLayout->addLayout(colSlidersInnerLayout);
     colsSliderOuterLayout->addSpacing(5);
     auto colsValue = new QLabel(QString::number(columns_slider->value()));
