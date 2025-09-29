@@ -7,6 +7,7 @@ A simple application for creating ASCII art from images and videos.
 
 - Qt6
 - OpenCV v4.x
+- TBB
 
 ## Building
 
