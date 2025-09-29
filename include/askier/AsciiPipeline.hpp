@@ -3,6 +3,8 @@
 #include <vector>
 #include <QImage>
 #include <opencv2/core.hpp>
+#include <opencv2/core/ocl.hpp>
+#undef emit
 
 
 enum DitheringType {
@@ -34,8 +36,11 @@ public:
      * @param params ASCII conversion parameters
      * @return result of the conversion
      */
-    [[nodiscard]] Result process(const cv::Mat &bgr, const AsciiParams &params) const;
+    [[nodiscard]] Result process(const cv::Mat &bgr, const AsciiParams &params);
 
 private:
     std::shared_ptr<GlyphDensityCalibrator> calibrator;
+    cv::ocl::Context clContext;
+    cv::UMat deviceLut, deviceDensePixmaps;
+    int pixmapHeight, pixmapWidth;
 };

@@ -29,7 +29,28 @@ ConversionParamsDialog::ConversionParamsDialog(const AsciiParams &currentParams,
     dithering_combo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     connect(dithering_combo, &QComboBox::currentTextChanged, this, &ConversionParamsDialog::onDitheringChanged);
 
+    columns_slider = new QSlider(Qt::Horizontal, this);
+    columns_slider->setRange(100, 1080);
+    columns_slider->setValue(params.columns);
 
+    auto colSlidersInnerLayout = new QHBoxLayout();
+    colSlidersInnerLayout->addWidget(new QLabel(QString::number(columns_slider->minimum())));
+    colSlidersInnerLayout->addWidget(columns_slider);
+    colSlidersInnerLayout->addWidget(new QLabel(QString::number(columns_slider->maximum())));
+
+    auto colsSliderOuterLayout = new QVBoxLayout();
+    auto colsLabel = new QLabel("Columns");
+    colsLabel->setAlignment(Qt::AlignCenter);
+    colsSliderOuterLayout->addWidget(colsLabel);
+    colsSliderOuterLayout->addLayout(colSlidersInnerLayout);
+    colsSliderOuterLayout->addSpacing(5);
+    auto colsValue = new QLabel(QString::number(columns_slider->value()));
+    colsValue->setAlignment(Qt::AlignCenter);
+    connect(columns_slider, &QSlider::valueChanged, this, [colsValue, this](int value) {
+        colsValue->setText(QString::number(value));
+        this->params.columns = value;
+    });
+    colsSliderOuterLayout->addWidget(colsValue);
 
     apply_button = new QPushButton("Apply", this);
     connect(apply_button, &QPushButton::clicked, this, &ConversionParamsDialog::accept);
@@ -42,6 +63,8 @@ ConversionParamsDialog::ConversionParamsDialog(const AsciiParams &currentParams,
     layout->addSpacing(10);
     layout->addWidget(ditheringLabel);
     layout->addWidget(dithering_combo);
+    layout->addSpacing(5);
+    layout->addLayout(colsSliderOuterLayout);
     layout->addSpacing(5);
     QHBoxLayout *buttons_layout = new QHBoxLayout();
     buttons_layout->addWidget(apply_button);
@@ -65,5 +88,3 @@ void ConversionParamsDialog::onDitheringChanged(const QString &text) {
         params.dithering = Ordered;
     }
 }
-
-

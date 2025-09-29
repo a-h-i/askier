@@ -35,12 +35,16 @@ public:
     double value() const;
 
     signals:
+
+
     
 
     void valueChanged(double value);
 
 private
     slots:
+
+
     
 
     void handleIntValueChanged(int value);

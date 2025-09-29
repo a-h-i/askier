@@ -23,6 +23,8 @@ public:
 
 private
     slots:
+
+
     
 
     void onToggleMode();

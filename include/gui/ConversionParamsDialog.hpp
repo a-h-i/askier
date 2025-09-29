@@ -17,13 +17,15 @@ public:
 
 public
     slots:
-    
-    void onDitheringChanged(const QString &text);
 
+    
+
+    void onDitheringChanged(const QString &text);
 
 private:
     QLabel *label;
     QComboBox *dithering_combo;
+    QSlider *columns_slider;
     QPushButton *apply_button, *cancel_button;
     AsciiParams params;
 };

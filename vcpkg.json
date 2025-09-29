@@ -3,7 +3,9 @@
   "version-string": "0.1.0",
   "dependencies": [
     "opencv",
-    "qtbase"
+    "qtbase",
+    "tbb",
+    "opencl"
   ],
   "builtin-baseline": "4334d8b4c8916018600212ab4dd4bbdc343065d1"
 }

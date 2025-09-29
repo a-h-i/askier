@@ -124,7 +124,6 @@ void MainWindow::stopCamera() {
     auto worker = captureWorker.release();
     connect(worker, &QThread::finished, worker, &QObject::deleteLater);
     worker->stop();
-
 }
 
 void MainWindow::onToggleMode() {

@@ -4,10 +4,12 @@ SET(SOURCE_LIST
 
         VideoCaptureWorker.cpp
         GlyphDensityCalibrator.cpp
-        AsciiMapper.cpp
-        AsciiRenderer.cpp
         AsciiPipeline.cpp
         ImageUtils.cpp
+        AsciimapOCL.cpp
+        OrderedDither.cpp
+        FloydSteinbergDither.cpp
+        ASCIIDrawGlyphsOCL.cpp
 )
 
 add_library(askier ${SOURCE_LIST} ${HEADER_FILES})
@@ -16,16 +18,18 @@ target_compile_features(askier PUBLIC cxx_std_23)
 target_compile_options(askier PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /WX>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
-        $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>: /02 /DNDEBUG>
+        $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>: /O2 /DNDEBUG>
         $<$<AND:$<CONFIG:Release>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-O3 -DNDEBUG -march=native>
 )
 
 target_include_directories(askier PUBLIC ../../include)
 
 find_package(OpenCV REQUIRED)
+find_package(TBB REQUIRED)
+find_package(OpenCL REQUIRED)
 
 target_include_directories(askier PRIVATE ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(askier PUBLIC ${OpenCV_LIBS})
+target_link_libraries(askier PUBLIC ${OpenCV_LIBS} TBB::tbb OpenCL::OpenCL)
 find_package(Qt6 REQUIRED COMPONENTS Core Concurrent Widgets)
 
 target_link_libraries(askier PUBLIC

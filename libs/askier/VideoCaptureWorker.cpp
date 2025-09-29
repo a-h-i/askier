@@ -27,6 +27,7 @@ void VideoCaptureWorker::run() {
         if (!cap.read(frame)) {
             break;
         }
+        cv::flip(frame, frame, 1); // Mirror the frame
         emit frameCaptured(frame.clone());
         msleep(16); // 60 fps
     }
