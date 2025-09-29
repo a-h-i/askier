@@ -12,6 +12,9 @@ kernel void floyd_steinberg_serpentine(
     int levels
 ) {
     int y = get_global_id(0);
+    if(y >= rows) {
+        return;
+    }
     float invScale = 1.0f / (float)(levels - 1);
     // Serpentine: left->right on even rows, right->left on odd rows
     int dir = (y & 1) ? -1 : 1;

@@ -1,34 +1,31 @@
 #include "askier/AsciimapOCL.hpp"
+#include <askier/Constants.hpp>
 
-#include <iostream>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/ocl.hpp>
 
-#include "askier/GlyphDensityCalibrator.hpp"
 
 
 static std::string kernel_source = R"SRC(
 kernel void ascii_map_lut(
 __global const float *src,
-int src_step,
-int src_offset,
+__global const uchar *lut,
+__global uchar *dst,
 int src_rows,
 int src_cols,
-__global const uchar *lut,
 int lut_size,
-__global uchar *dst,
-int dst_step,
-int dst_offset,
-int dst_rows,
 int dst_cols
 )
 {
     const int x = get_global_id(0);
     const int y = get_global_id(1);
+    if(x >= src_cols || y >= src_rows) {
+        return;
+    }
 
 
-    const int source_idx = y * src_step / sizeof(float)  + x + src_offset ;
-    const int dst_idx = y * dst_step + dst_offset + x;
+    const int source_idx = y * src_cols  + x ;
+    const int dst_idx = y * dst_cols + x;
 
     const float luminance = src[source_idx];
     const float darkness = 1.0f - luminance;
@@ -47,11 +44,10 @@ int dst_cols
 cv::UMat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
                          const cv::UMat &deviceLut) {
     CV_Assert(src.type() == CV_32F);
-    CV_Assert(deviceLut.type() == CV_8UC1);
+    CV_Assert(deviceLut.type() == CV_8U);
     CV_Assert(deviceLut.rows == 1);
     CV_Assert(deviceLut.cols == ASCII_COUNT);
     cv::UMat dst(src.size(), CV_8U, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
-    dst.setTo(0);
 
     cv::ocl::ProgramSource source(kernel_source);
     std::string compileErrors;
@@ -67,10 +63,13 @@ cv::UMat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
     CV_Assert(!deviceLut.empty());
 
     kernel.args(
-        cv::ocl::KernelArg::ReadOnly(src),
+        cv::ocl::KernelArg::PtrReadOnly(src),
         cv::ocl::KernelArg::PtrReadOnly(deviceLut),
+        cv::ocl::KernelArg::PtrWriteOnly(dst),
+        src.rows,
+        src.cols,
         ASCII_COUNT,
-        cv::ocl::KernelArg::WriteOnly(dst)
+        dst.cols
     );
 
 
