@@ -101,8 +101,8 @@ void GlyphDensityCalibrator::saveCache() {
 
 void GlyphDensityCalibrator::calibrate() {
     QFontMetrics metrics(font_);
-    const int cell_width = std::max(100, metrics.horizontalAdvance("M"));
-    const int cell_height = std::max(100, metrics.height());
+    const int cell_width = std::max(10, metrics.horizontalAdvance("M"));
+    const int cell_height = std::max(10, metrics.height());
 
     aspect = static_cast<double>(cell_height) / static_cast<double>(cell_width);
 
@@ -124,23 +124,18 @@ void GlyphDensityCalibrator::calibrate() {
         painter.setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing, true);
         painter.setPen(Qt::black);
         painter.setFont(font_);
-        // Baseline-aligned drawing: horizontally center by text width,
-        // vertically set baseline so ascent/descent are balanced inside the cell.
         const QString s = QString(QChar(c));
-        const int textWidth = metrics.horizontalAdvance(s);
-        const int ascent = metrics.ascent();
-        const int descent = metrics.descent();
-        int x = (cell_width - textWidth) / 2;
-        int baselineY = (cell_height + ascent - descent) / 2;
-        // Clamp to avoid negative positions in extreme cases
-        x = std::max(x, 0);
-        baselineY = std::clamp(baselineY, 0, cell_height);
+        const auto boundingRect = metrics.tightBoundingRect(s);
+        int x = cell_width - boundingRect.width();
+        x = std::clamp(x, 0, cell_width / 2);
+        int baselineY = cell_height - boundingRect.height() / 2;
+        baselineY = std::clamp(baselineY, 0, cell_height / 2);
         painter.drawText(x, baselineY, s);
         painter.end();
 
         // compute normalized darkness coverage
         const uchar *bits = img.constBits();
-        const int stride = img.bytesPerLine();
+        const size_t stride = img.bytesPerLine();
         double sum = 0.0;
         std::vector<uchar> pixmap;
         pixmap.resize(cell_height * cell_width);

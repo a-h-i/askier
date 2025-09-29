@@ -53,7 +53,7 @@ AsciiPipeline::AsciiPipeline(
 AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr,
                                              const AsciiParams &params) {
   if (bgr.empty()) {
-    return Result();
+    return {};
   }
   // compute rows from columns and font aspect
   const double aspect = calibrator->cellAspect();
@@ -118,12 +118,14 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr,
           }
         });
   });
-  const auto display = ascii_draw_glyphs_ocl(
-      clContext, mappedUMatrix.clone(), deviceDensePixmaps, pixmapWidth, pixmapHeight,
-      pixmapWidth, pixmapHeight);
+  // const auto display = ascii_draw_glyphs_ocl(
+  //     clContext, mappedUMatrix.clone(), deviceDensePixmaps, pixmapWidth, pixmapHeight,
+  //     pixmapWidth, pixmapHeight);
 
+  // result.preview = matToQImageGray(display);
   linesMappingFuture.wait();
-  result.preview = matToQImageGray(display);
+  const AsciiRenderer renderer(calibrator->font());
+  result.preview = renderer.render(result.lines);
   cv::Mat midImage;
   cells.convertTo(midImage, CV_8UC1, 255);
   result.midImage = matToQImageGray(midImage);
