@@ -9,7 +9,6 @@
 #include <stdexcept>
 
 #include "askier/ASCIIDrawGlyphsOCL.hpp"
-#include "askier/AsciiRenderer.hpp"
 #include "askier/AsciimapOCL.hpp"
 #include "askier/Dithering.hpp"
 #include "askier/ImageUtils.hpp"
