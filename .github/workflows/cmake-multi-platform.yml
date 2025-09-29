@@ -25,24 +25,14 @@ jobs:
       matrix:
         os: [ ubuntu-latest ]
         build_type: [ Release ]
-        c_compiler: [ gcc, clang, cl ]
+        c_compiler: [ gcc, clang ]
         include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
-          - os: ubuntu-latest
-            c_compiler: cl
 
     steps:
       - uses: actions/checkout@v4
@@ -66,30 +56,7 @@ jobs:
             ocl-icd-opencl-dev \
             pocl-opencl-icd
 
-      - name: Setup vcpkg (Windows)
-        if: matrix.os == 'windows-latest'
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: 4334d8b4c8916018600212ab4dd4bbdc343065d1
-          vcpkgJsonGlob: 'vcpkg.json'
-          doNotCache: 'false'
-      - name: Cache vcpkg artifacts (Windows)
-        if: matrix.os == 'windows-latest'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ github.workspace }}/vcpkg_installed
-            ${{ env.VCPKG_ROOT }}/installed
-            ${{ env.VCPKG_ROOT }}/packages
-            ${{ env.VCPKG_ROOT }}/buildtrees
-            ${{ env.VCPKG_ROOT }}/downloads
-          key: vcpkg-artifacts-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}-${{ hashFiles('.github/workflows/cmake-multi-platform.yml') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-
 
-      - name: Run VCPKG install
-        if: matrix.os == 'windows-latest'
-        run: vcpkg install
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -99,7 +66,6 @@ jobs:
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          ${{ matrix.os == 'windows-latest' && format('-DCMAKE_TOOLCHAIN_FILE={0}\scripts\buildsystems\vcpkg.cmake', env.VCPKG_ROOT) || '' }}
           -S ${{ github.workspace }}
 
       - name: Build
