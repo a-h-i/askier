@@ -28,7 +28,7 @@ private:
     QFont font_;
     // Look up table
     std::array<char, ASCII_COUNT> lut_{};
-    std::vector<uchar> pixmaps_{};
+    std::vector<unsigned char> pixmaps_{};
     std::array<int, ASCII_COUNT> pixmap_widths;
     std::array<int, ASCII_COUNT> pixmap_heights;
     double aspect = 2.0;

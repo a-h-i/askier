@@ -1,4 +1,7 @@
 #include "askier/GlyphDensityCalibrator.hpp"
+
+#include <iostream>
+
 #include "askier/Constants.hpp"
 #include "askier/version.hpp"
 #include <QStandardPaths>
@@ -11,12 +14,33 @@
 #include <QFontMetrics>
 #include <QImage>
 #include <QPainter>
+#include <QImageWriter>
 
 
-QString cachePathFromFont(const QFont &font) {
+static QString cacheBasePath() {
     const QString base = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir().mkpath(base);
-    const QString key = font.family() + QString("_%1").arg(font.pointSize());
+    return base;
+}
+
+
+static QString fontKey(const QFont &font) {
+    return font.family() + QString("_%1").arg(font.pointSize());
+}
+
+static QString glyphPixmapCachePath(const QFont &font, const QString &glyph, const QString &extension) {
+    const auto base = cacheBasePath() + "/pixmaps";
+    const QString key = fontKey(font);
+    QDir().mkpath(base);
+    std::string glyphCode = std::to_string(static_cast<int>(glyph.at(0).toLatin1()));
+    return base + "/" + ASKIER_VERSION + "_" + key + "_glyph_" + QString::fromStdString(glyphCode) + "_pixmap" + "." + extension;
+}
+
+
+static QString cachePathFromFont(const QFont &font) {
+    const auto base = cacheBasePath();
+
+    const QString key = fontKey(font);
     const QString path = base + "/ascii_lut_v" + ASKIER_VERSION + "_" + key + ".json";
     return path;
 }
@@ -110,7 +134,7 @@ void GlyphDensityCalibrator::calibrate() {
     struct GlyphDensity {
         char c;
         double density;
-        std::vector<uchar> pixmap;
+        std::vector<unsigned char> pixmap;
         int cell_width, cell_height;
     };
     std::vector<GlyphDensity> glyphs;
@@ -132,19 +156,24 @@ void GlyphDensityCalibrator::calibrate() {
         baselineY = std::clamp(baselineY, 0, cell_height / 2);
         painter.drawText(x, baselineY, s);
         painter.end();
+        const auto imgPath = glyphPixmapCachePath(font_, s,"png");
+        std::cout << imgPath.toStdString() << std::endl;
+        QImageWriter writer(imgPath);
+        const auto saved = writer.write(img);
+        if (!saved) {
+            throw std::runtime_error("Error saving glyph" + s.toStdString() + " pixmap:\n" + writer.errorString().toStdString());
+        }
 
         // compute normalized darkness coverage
-        const uchar *bits = img.constBits();
-        const size_t stride = img.bytesPerLine();
         double sum = 0.0;
-        std::vector<uchar> pixmap;
-        pixmap.resize(cell_height * cell_width);
-        for (int y = 0; y < cell_height; ++y) {
-            const uchar *row = bits + y * stride;
+        std::vector<unsigned char> pixmap;
+        pixmap.reserve(cell_height * cell_width);
+        for (int row = 0; row < cell_height; ++row) {
             for (int column = 0; column < cell_width; ++column) {
-                const double gray = row[column];
-                pixmap.push_back(row[column]);
-                sum += 1.0 - gray / 255.0;
+                const auto pixel = img.pixel(column, row);
+                const unsigned char gray = qGray(pixel);
+                pixmap.push_back(gray);
+                sum += 1.0 - static_cast<float>(gray) / 255.0;
             }
         }
         const double density = sum / (cell_width * cell_height);
