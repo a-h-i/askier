@@ -148,16 +148,13 @@ void GlyphDensityCalibrator::calibrate() {
         painter.setRenderHints(QPainter::TextAntialiasing | QPainter::Antialiasing, true);
         painter.setPen(Qt::black);
         painter.setFont(font_);
-        const QString s = QString(QChar(c));
-        const auto boundingRect = metrics.tightBoundingRect(s);
-        int x = cell_width - boundingRect.width();
-        x = std::clamp(x, 0, cell_width / 2);
-        int baselineY = cell_height - boundingRect.height() / 2;
-        baselineY = std::clamp(baselineY, 0, cell_height / 2);
-        painter.drawText(x, baselineY, s);
+        const QString s{QChar(c)};
+        const int x = 0;
+        int y = cell_height - metrics.descent();
+        y = std::clamp(y, 0, cell_height);
+        painter.drawText(x, y, s);
         painter.end();
         const auto imgPath = glyphPixmapCachePath(font_, s,"png");
-        std::cout << imgPath.toStdString() << std::endl;
         QImageWriter writer(imgPath);
         const auto saved = writer.write(img);
         if (!saved) {
