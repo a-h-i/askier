@@ -15,8 +15,9 @@ pmap_area = height * width
 # grid_width = math.ceil((len(pixmap) // pmap_area) / grid_height)
 # grid = np.zeros_like((grid_height * height, grid_width * width)) + 127
 pmaps = []
-pmap_idx = 80 - 32
-pmap = pixmap[pmap_idx:pmap_idx + pmap_area]
+pmap_idx = ord('g') - 32
+pmap_start = pmap_idx * pmap_area
+pmap = pixmap[pmap_start:pmap_start + pmap_area]
 pmap = np.array(pmap).reshape((height, width))
 print(pmap.min(), pmap.max())
 pmap = pmap.astype('uint8')

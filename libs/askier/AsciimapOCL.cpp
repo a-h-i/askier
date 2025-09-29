@@ -77,5 +77,5 @@ cv::UMat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
     bool run_ok = kernel.run(2, globals, nullptr, true);
     CV_Assert(run_ok);
 
-    return dst;
+    return dst.clone();
 }

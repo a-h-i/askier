@@ -25,16 +25,17 @@ kernel void ascii_map_glyphs(
      const int y = get_global_id(1);
      const int glyph_idx = y * glyphs_step + x + glyphs_offset;
      const uchar glyph = glyphs[glyph_idx];
-     const int pixmap_glyph_idx = glyph - 32;
-     const int pixmap_start_offset = pixmap_glyph_idx * pixmap_height * pixmap_width;
-     const int dst_y_start_offset = y * pixmap_height;
-     const int dst_x_start_offset = x * pixmap_width;
+     int pixmap_glyph_idx = glyph - 32;
+     const int glyph_area = pixmap_height * pixmap_width;
+     const int pixmap_start_offset = pixmap_glyph_idx * glyph_area;
+     const int dst_pixel_y = y * pixmap_height;
+     const int dst_pixel_x = x * pixmap_width;
      for(int pmap_y = 0; pmap_y < pixmap_height; ++pmap_y) {
          const int dst_y = dst_y_start_offset + pmap_y;
          for(int pmap_x = 0; pmap_x < pixmap_width; ++pmap_x) {
              const int dst_x = dst_x_start_offset + pmap_x;
              const int dst_idx = dst_y * dst_cols + dst_x;
-             const int pmap_idx = pmap_y * pixmap_width + pmap_x + pixmap_start_offset;
+             const int pmap_idx = pixmap_start_offset + pmap_y * pixmap_width + pmap_x ;
              dst[dst_idx] = dense_pixmaps[pmap_idx];
          }
      }
@@ -71,7 +72,6 @@ cv::Mat ascii_draw_glyphs_ocl(
     CV_Assert(!kernel.empty());
     CV_Assert(densePixmaps.isContinuous());
     CV_Assert(dst.isContinuous());
-
     kernel.args(
         cv::ocl::KernelArg::ReadOnly(glyphs),
         cv::ocl::KernelArg::PtrReadOnly(densePixmaps),

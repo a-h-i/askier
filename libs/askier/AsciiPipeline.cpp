@@ -102,7 +102,7 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr,
 
   auto linesMappingFuture = std::async(std::launch::async, [&mappedUMatrix,
                                                             &result]() {
-    const auto mappedMatrix = mappedUMatrix.getMat(cv::ACCESS_READ);
+    const auto mappedMatrix = mappedUMatrix.getMat(cv::ACCESS_READ).clone();
     oneapi::tbb::parallel_for(
         oneapi::tbb::blocked_range<int>(0, mappedMatrix.rows),
         [&mappedMatrix, &result](const oneapi::tbb::blocked_range<int> &range) {
@@ -118,14 +118,13 @@ AsciiPipeline::Result AsciiPipeline::process(const cv::Mat &bgr,
           }
         });
   });
-  // const auto display = ascii_draw_glyphs_ocl(
-  //     clContext, mappedUMatrix.clone(), deviceDensePixmaps, pixmapWidth, pixmapHeight,
-  //     pixmapWidth, pixmapHeight);
 
-  // result.preview = matToQImageGray(display);
+  const auto display = ascii_draw_glyphs_ocl(
+      clContext, mappedUMatrix.clone(), deviceDensePixmaps, pixmapWidth, pixmapHeight,
+      pixmapWidth, pixmapHeight);
+
+  result.preview = matToQImageGray(display);
   linesMappingFuture.wait();
-  const AsciiRenderer renderer(calibrator->font());
-  result.preview = renderer.render(result.lines);
   cv::Mat midImage;
   cells.convertTo(midImage, CV_8UC1, 255);
   result.midImage = matToQImageGray(midImage);

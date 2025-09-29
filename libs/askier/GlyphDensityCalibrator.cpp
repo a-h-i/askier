@@ -33,7 +33,8 @@ static QString glyphPixmapCachePath(const QFont &font, const QString &glyph, con
     const QString key = fontKey(font);
     QDir().mkpath(base);
     std::string glyphCode = std::to_string(static_cast<int>(glyph.at(0).toLatin1()));
-    return base + "/" + ASKIER_VERSION + "_" + key + "_glyph_" + QString::fromStdString(glyphCode) + "_pixmap" + "." + extension;
+    return base + "/" + ASKIER_VERSION + "_" + key + "_glyph_" + QString::fromStdString(glyphCode) + "_pixmap" + "." +
+           extension;
 }
 
 
@@ -154,11 +155,12 @@ void GlyphDensityCalibrator::calibrate() {
         y = std::clamp(y, 0, cell_height);
         painter.drawText(x, y, s);
         painter.end();
-        const auto imgPath = glyphPixmapCachePath(font_, s,"png");
+        const auto imgPath = glyphPixmapCachePath(font_, s, "png");
         QImageWriter writer(imgPath);
         const auto saved = writer.write(img);
         if (!saved) {
-            throw std::runtime_error("Error saving glyph" + s.toStdString() + " pixmap:\n" + writer.errorString().toStdString());
+            throw std::runtime_error(
+                "Error saving glyph" + s.toStdString() + " pixmap:\n" + writer.errorString().toStdString());
         }
 
         // compute normalized darkness coverage
@@ -183,8 +185,13 @@ void GlyphDensityCalibrator::calibrate() {
     for (size_t i = 0; i < lut_.size(); ++i) {
         const auto &glyph = glyphs[i];
         lut_[i] = glyph.c;
-        std::ranges::copy(glyph.pixmap, std::back_inserter(pixmaps_));
         pixmap_heights[i] = glyph.cell_height;
         pixmap_widths[i] = glyph.cell_width;
+    }
+    std::ranges::sort(glyphs, [](const GlyphDensity &a, const GlyphDensity &b) {
+        return a.c < b.c;
+    });
+    for (const auto &glyph: glyphs) {
+        std::ranges::copy(glyph.pixmap, std::back_inserter(pixmaps_));
     }
 }
