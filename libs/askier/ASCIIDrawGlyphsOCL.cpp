@@ -26,6 +26,9 @@ kernel void ascii_map_glyphs(
      const int glyph_idx = y * glyphs_step + x + glyphs_offset;
      const uchar glyph = glyphs[glyph_idx];
      int pixmap_glyph_idx = glyph - 32;
+     if (pixmap_glyph_idx < 0) {
+        return;
+     }
      const int glyph_area = pixmap_height * pixmap_width;
      const int pixmap_start_offset = pixmap_glyph_idx * glyph_area;
      const int dst_pixel_y = y * pixmap_height;

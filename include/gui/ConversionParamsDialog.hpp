@@ -25,6 +25,7 @@ public
 private:
     QLabel *label;
     QComboBox *dithering_combo;
+    QSlider *columns_slider;
     QPushButton *apply_button, *cancel_button;
     AsciiParams params;
 };
