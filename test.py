@@ -21,15 +21,7 @@ pmap = pixmap[pmap_start:pmap_start + pmap_area]
 pmap = np.array(pmap).reshape((height, width))
 print(pmap.min(), pmap.max())
 pmap = pmap.astype('uint8')
-pmaps.append(pmap)
-# output = np.concatenate(pmaps, 0)
-# grid = np.zeros((10 * height, 10 * width))
-# for i, pmap in enumerate(pmaps):
-#     print(type(pmap), type(i))
-#     y = i // 10
-#     x = i % 10
-#     grid[y:y+height, x:x+width] = pmap
-#     break
-cv.imshow('pixel map', cv.resize(pixmap, (10 * 19, 22 * 5)))
+
+cv.imshow('pixel map', pmap)
 cv.waitKey(0)
 # print(len(pmaps))

@@ -31,9 +31,9 @@ kernel void ascii_map_glyphs(
      const int dst_pixel_y = y * pixmap_height;
      const int dst_pixel_x = x * pixmap_width;
      for(int pmap_y = 0; pmap_y < pixmap_height; ++pmap_y) {
-         const int dst_y = dst_y_start_offset + pmap_y;
+         const int dst_y = dst_pixel_y + pmap_y;
          for(int pmap_x = 0; pmap_x < pixmap_width; ++pmap_x) {
-             const int dst_x = dst_x_start_offset + pmap_x;
+             const int dst_x = dst_pixel_x + pmap_x;
              const int dst_idx = dst_y * dst_cols + dst_x;
              const int pmap_idx = pixmap_start_offset + pmap_y * pixmap_width + pmap_x ;
              dst[dst_idx] = dense_pixmaps[pmap_idx];

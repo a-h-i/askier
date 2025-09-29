@@ -50,7 +50,8 @@ cv::UMat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
     CV_Assert(deviceLut.type() == CV_8UC1);
     CV_Assert(deviceLut.rows == 1);
     CV_Assert(deviceLut.cols == ASCII_COUNT);
-    cv::UMat dst(src.size(), CV_8UC1, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+    cv::UMat dst(src.size(), CV_8U, cv::USAGE_ALLOCATE_DEVICE_MEMORY);
+    dst.setTo(0);
 
     cv::ocl::ProgramSource source(kernel_source);
     std::string compileErrors;
@@ -71,6 +72,8 @@ cv::UMat ascii_mapper_ocl(cv::ocl::Context &context, const cv::UMat &src,
         ASCII_COUNT,
         cv::ocl::KernelArg::WriteOnly(dst)
     );
+
+
 
 
     size_t globals[2] = {static_cast<size_t>(src.cols), static_cast<size_t>(src.rows)};
