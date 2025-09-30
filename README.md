@@ -1,7 +1,7 @@
 Askier
 ======
 
-A simple application for creating ASCII art from images and videos.
+A simple application for creating ASCII art from images and camera.
 
 ## Dependencies
 
